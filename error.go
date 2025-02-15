@@ -19,3 +19,11 @@ var InvalidAccount = errorx.NewType(DomainNamespace, "invaild_account", Validate
 var InvalidDomain = errorx.NewType(DomainNamespace, "invaild_domain", ValidateDomainTrait)
 
 var InvalidRawDomain = errorx.NewType(DomainNamespace, "invaild_raw_domain", ParseDomainTrait)
+
+// Loading multiple domains files from the configuration directory
+var DomainsNamespace = errorx.NewNamespace("domains")
+var LoadDomainsTrait = errorx.RegisterTrait("load_domains")
+
+var ReadDomainsDirectory = errorx.NewType(DomainsNamespace, "read_domains_directory", LoadDomainsTrait)
+var ReadDomainFile = errorx.NewType(DomainsNamespace, "read_domain_file", LoadDomainsTrait)
+var LoadDomain = errorx.NewType(DomainsNamespace, "load_domain", LoadDomainsTrait)
