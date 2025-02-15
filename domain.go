@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml/v2"
 )
 
 type RawAccount struct {
@@ -41,6 +41,32 @@ func ValidateAccount(raw RawAccount) (a *Account, err error) {
 	}
 
 	a = &acc
+	return
+}
+
+type Authentication struct {
+	Method  string            `json:"method"`
+	Options map[string]string `json:"options"`
+}
+
+// ValidateAuthentication validates authentication parameters and sets
+// defaults values for the authentication section of a domain definition.
+func ValidateAuthentication(raw Authentication) (a *Authentication, err error) {
+	var auth Authentication
+
+	auth.Method = DEFAULT_AUTHENTICATION_METHOD
+	if len(raw.Method) > 0 {
+		auth.Method = raw.Method
+	}
+	if !VALID_AUTHENTICATION_METHODS[auth.Method] {
+		err = InvalidMethod.New("invalid authentication method: %s", auth.Method)
+		return
+	}
+
+	// TODO: verify options based on the authentication method
+	auth.Options = raw.Options
+
+	a = &auth
 	return
 }
 
@@ -145,15 +171,17 @@ func ValidateInstall(raw RawInstall) (i *Install, err error) {
 }
 
 type RawDomain struct {
-	Domain   string       `toml:"domain"`
-	Account  RawAccount   `toml:"account"`
-	Installs []RawInstall `toml:"installs"`
+	Domain         string         `toml:"domain"`
+	Account        RawAccount     `toml:"account"`
+	Authentication Authentication `toml:"authentication"`
+	Installs       []RawInstall   `toml:"installs"`
 }
 
 type Domain struct {
-	Domain   string
-	Account  Account
-	Installs []Install
+	Domain         string
+	Account        Account
+	Authentication Authentication
+	Installs       []Install
 }
 
 // PraseDomain parses a RawDomain into an Domain struct by parsing all
@@ -170,16 +198,24 @@ func ValidateDomain(raw RawDomain) (d *Domain, err error) {
 	var acc *Account
 	acc, err = ValidateAccount(raw.Account)
 	if err != nil {
-		err = InvalidAccount.Wrap(err, "could not verify account definition")
+		err = InvalidAccount.Wrap(err, "could not validate account definition")
 		return
 	}
 	dom.Account = *acc
+
+	var auth *Authentication
+	auth, err = ValidateAuthentication(raw.Authentication)
+	if err != nil {
+		err = InvalidAuthentication.Wrap(err, "could not validate authentication definition")
+		return
+	}
+	dom.Authentication = *auth
 
 	for i, rawInst := range raw.Installs {
 		var inst *Install
 		inst, err = ValidateInstall(rawInst)
 		if err != nil {
-			err = InvalidInstall.Wrap(err, "could not verify install definition at position %d", i)
+			err = InvalidInstall.Wrap(err, "could not validate install definition at position %d", i)
 			return
 		}
 		dom.Installs = append(dom.Installs, *inst)

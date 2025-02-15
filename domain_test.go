@@ -49,23 +49,25 @@ func TestParseDomainCorrect(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, d)
 
-	assert.Equal(t, d.Domain, "example.com")
+	assert.Equal(t, "example.com", d.Domain)
 
-	assert.Equal(t, d.Account.Email, "root@example.com")
-	assert.Equal(t, d.Account.Directroy.String(), sacme.DEFAULT_DIRECTORY)
+	assert.Equal(t, "root@example.com", d.Account.Email)
+	assert.Equal(t, sacme.DEFAULT_DIRECTORY, d.Account.Directroy.String())
 
 	assert.Len(t, d.Installs, 1)
 	inst0 := d.Installs[0]
-	assert.EqualValues(t, inst0.Key, &sacme.PathPerm{
+	assert.EqualValues(t, &sacme.PathPerm{
 		Path:  "/test/path.key",
 		Perm:  0600,
 		Owner: u,
 		Group: g,
-	})
-	assert.EqualValues(t, inst0.Crt, &sacme.PathPerm{
+	}, inst0.Key)
+	assert.EqualValues(t, &sacme.PathPerm{
 		Path:  "/test/path.crt",
 		Perm:  0644,
 		Owner: u,
 		Group: g,
-	})
+	}, inst0.Crt)
+	assert.Equal(t, sacme.DEFAULT_AUTHENTICATION_METHOD, d.Authentication.Method)
+	assert.Len(t, d.Authentication.Options, 0)
 }
