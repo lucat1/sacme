@@ -21,7 +21,7 @@ func ValidRawDomain(t *testing.T) (rawDomain string, u *user.User, g *user.Group
 	assert.NotEmpty(t, g.Name)
 
 	rawDomain = fmt.Sprintf(`
-domains = ["example.com"]
+domain = "example.com"
 
 [account]
 email = "root@example.com"
@@ -49,7 +49,7 @@ func TestParseDomainCorrect(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, d)
 
-	assert.EqualValues(t, d.Domains, []string{"example.com"})
+	assert.Equal(t, d.Domain, "example.com")
 
 	assert.Equal(t, d.Account.Email, "root@example.com")
 	assert.Equal(t, d.Account.Directroy.String(), sacme.DEFAULT_DIRECTORY)

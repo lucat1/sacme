@@ -1,0 +1,24 @@
+domain = "example.com"
+
+[account]
+email = "root@example.com"
+
+[[installs]]
+
+[installs.key]
+path = "/tmp/path.key"
+perm = "0600"
+owner = "root"
+group = "root"
+
+[installs.crt]
+path = "/tmp/path.crt"
+perm = "0644"
+owner = "root"
+group = "root"
+
+[installs.ca]
+path = "/tmp/ca.crt"
+perm = "0644"
+owner = "root"
+group = "root"

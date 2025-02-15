@@ -145,13 +145,13 @@ func ValidateInstall(raw RawInstall) (i *Install, err error) {
 }
 
 type RawDomain struct {
-	Domains  []string     `toml:"domains"`
+	Domain   string       `toml:"domain"`
 	Account  RawAccount   `toml:"account"`
 	Installs []RawInstall `toml:"installs"`
 }
 
 type Domain struct {
-	Domains  []string
+	Domain   string
 	Account  Account
 	Installs []Install
 }
@@ -160,7 +160,11 @@ type Domain struct {
 // RawPathPerm structs
 func ValidateDomain(raw RawDomain) (d *Domain, err error) {
 	dom := Domain{
-		Domains: raw.Domains,
+		Domain: raw.Domain,
+	}
+	if len(dom.Domain) <= 0 {
+		err = InvalidDomain.Wrap(err, "missing domain record")
+		return
 	}
 
 	var acc *Account

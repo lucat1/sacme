@@ -20,5 +20,5 @@ func TestLoadDomains(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Len(t, domains, 1)
 	d := domains[0]
-	assert.EqualValues(t, d.Domains, []string{"example.com"})
+	assert.EqualValues(t, d.Domain, "example.com")
 }
