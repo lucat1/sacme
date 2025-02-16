@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/lucat1/sacme"
 	"github.com/warpfork/go-fsx/osfs"
@@ -56,6 +57,7 @@ func main() {
 			slog.Error("could not load domain state", "err", err)
 			os.Exit(3)
 		}
+
 		slog.Info("loaded domain state", "account", state.Account)
 
 		if !state.IsRegistered() {
@@ -70,21 +72,50 @@ func main() {
 			slog.Info("registered account")
 		}
 
-		slog.Info("obtaining certificate")
+		newCertificate := false
+		if state.ACME.Empty() {
+			slog.Info("obtaining certificate")
 
-		err = sacme.ObtainCertificate(domain, state)
-		if err != nil {
-			slog.Error("error while obtaining certificate with ACME", "err", err)
-			os.Exit(4)
+			err = sacme.ObtainCertificate(domain, state)
+			if err != nil {
+				slog.Error("error while obtaining certificate with ACME", "err", err)
+				os.Exit(4)
+			}
+
+			newCertificate = true
+			slog.Info("obtained certificate")
 		}
 
-		slog.Info("obtained certificate")
-
-		slog.Info("saving state")
-		err = store.Store(domain, state)
+		certificates, err := state.ACME.Certificates()
 		if err != nil {
-			slog.Error("error while saving updated state", "err", err)
-			os.Exit(5)
+			slog.Error("could not parse certificate bundle", "err", err)
+			os.Exit(6)
+		}
+		certificate := certificates[0]
+		now := time.Now()
+		slog.Info("loaded certificate", "notBefore", certificate.NotBefore, "now", now, "notAfter", certificate.NotAfter)
+		remainingTime := certificate.NotAfter.Sub(now)
+
+		if remainingTime <= sacme.RENEW_DAYS_BEOFRE {
+			slog.Info("renewing certificate")
+
+			err = sacme.RenewCertificate(domain, state)
+			if err != nil {
+				slog.Error("error while renewing certificate with ACME", "err", err)
+				os.Exit(7)
+			}
+
+			newCertificate = true
+			slog.Info("renewed certificate")
+		}
+
+		if newCertificate {
+			slog.Info("saving state")
+			err = store.Store(domain, state)
+			if err != nil {
+				slog.Error("error while saving updated state", "err", err)
+				os.Exit(8)
+			}
 		}
 	}
 }

@@ -52,6 +52,7 @@ var CertificateObtain = errorx.NewType(ACMENamespace, "certificate_obtain", Obta
 var StateNamespace = errorx.NewNamespace("state")
 var LoadTrait = errorx.RegisterTrait("load")
 var StoreTrait = errorx.RegisterTrait("store")
+var CertificatesTrait = errorx.RegisterTrait("certificates")
 
 var GenerateKey = errorx.NewType(StateNamespace, "generate_key", LoadTrait)
 var NewStateError = errorx.NewType(StateNamespace, "new_state", LoadTrait)
@@ -59,3 +60,6 @@ var DecodeState = errorx.NewType(StateNamespace, "decode_state", LoadTrait)
 
 var OpenStoreFile = errorx.NewType(StateNamespace, "open_store_file", StoreTrait)
 var EncodeState = errorx.NewType(StateNamespace, "encode_state", StoreTrait)
+
+var MissingCertificate = errorx.NewType(StateNamespace, "missing_certificate", CertificatesTrait)
+var ParseCertificates = errorx.NewType(StateNamespace, "parse_certificates", CertificatesTrait)

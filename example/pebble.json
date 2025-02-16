@@ -8,22 +8,14 @@
     "tlsPort": 5001,
     "ocspResponderURL": "",
     "externalAccountBindingRequired": false,
+    "certificateValidityPeriod": 90,
+    "actualCertificateValidityPeriod": 7776000,
     "domainBlocklist": [
       "blocked-domain.example"
     ],
     "retryAfter": {
       "authz": 3,
       "order": 5
-    },
-    "profiles": {
-      "default": {
-        "description": "The profile you know and love",
-        "validityPeriod": 7776000
-      },
-      "shortlived": {
-        "description": "A short-lived cert profile, without actual enforcement",
-        "validityPeriod": 518400
-      }
     }
   }
 }

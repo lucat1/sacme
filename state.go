@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/x509"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -13,6 +14,7 @@ import (
 
 	fs "github.com/warpfork/go-fsx"
 
+	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/registration"
 )
 
@@ -83,10 +85,32 @@ func (a *AccountState) GetPrivateKey() crypto.PrivateKey {
 }
 
 type ACMEState struct {
+	Domain        string
+	CertURL       string
+	CertStableURL string
+
 	PrivateKey        []byte
 	Certificate       []byte
 	IssuerCertificate []byte
 	CSR               []byte
+}
+
+func (state ACMEState) Empty() bool {
+	return len(state.Certificate) <= 0
+}
+
+func (state ACMEState) Certificates() (certs []*x509.Certificate, err error) {
+	if state.Empty() {
+		err = MissingCertificate.New("requested certificate list for an ACME state which is missing certificates")
+		return
+	}
+	certs, err = certcrypto.ParsePEMBundle(state.Certificate)
+	if err != nil {
+		err = ParseCertificates.Wrap(err, "could not parse certificate bundle as x509")
+		return
+	}
+
+	return
 }
 
 // State holds the account/acme/installation state for a domain

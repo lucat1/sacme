@@ -103,10 +103,48 @@ func ObtainCertificate(domain Domain, state *State) (err error) {
 		err = CertificateObtain.Wrap(err, "could not obtain certifiate through ACME")
 		return
 	}
-	state.ACME.PrivateKey = certificate.PrivateKey
-	state.ACME.Certificate = certificate.Certificate
-	state.ACME.IssuerCertificate = certificate.IssuerCertificate
-	state.ACME.CSR = certificate.CSR
+	state.ACME = ACMEState{
+		Domain:        certificate.Domain,
+		CertURL:       certificate.CertURL,
+		CertStableURL: certificate.CertStableURL,
+
+		PrivateKey:        certificate.PrivateKey,
+		Certificate:       certificate.Certificate,
+		IssuerCertificate: certificate.IssuerCertificate,
+		CSR:               certificate.CSR,
+	}
+
+	return
+}
+
+func RenewCertificate(domain Domain, state *State) (err error) {
+	client, err := GetClient(domain, *state)
+	if err != nil {
+		return
+	}
+
+	err = SetupProvider(domain, client)
+	if err != nil {
+		err = ProviderSetup.Wrap(err, "could not setup provider for ACME challange")
+		return
+	}
+
+	// TODO: renew
+	// state.ACME = ACMEState{
+	// 	Domain:        certificate.Domain,
+	// 	CertURL:       certificate.CertURL,
+	// 	CertStableURL: certificate.CertStableURL,
+	//
+	// 	PrivateKey:        certificate.PrivateKey,
+	// 	Certificate:       certificate.Certificate,
+	// 	IssuerCertificate: certificate.IssuerCertificate,
+	// 	CSR:               certificate.CSR,
+	// }
+	// certificate, err := client.Certificate.Renew()
+	// if err != nil {
+	// 	err = CertificateObtain.Wrap(err, "could not obtain certifiate through ACME")
+	// 	return
+	// }
 
 	return
 }
