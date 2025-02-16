@@ -11,12 +11,14 @@ import (
 
 type RawAccount struct {
 	Email     string  `toml:"email"`
+	KeyType   KeyType `toml:"key_type"`
 	AcceptTOS bool    `toml:"accept_tos"`
 	Directroy *string `toml:"directory"`
 }
 
 type Account struct {
 	Email     string
+	KeyType   KeyType
 	AcceptTOS bool
 	// desipite the type this field is always available
 	Directroy *url.URL
@@ -28,6 +30,20 @@ func ValidateAccount(raw RawAccount) (a *Account, err error) {
 	acc := Account{
 		Email:     raw.Email,
 		AcceptTOS: raw.AcceptTOS,
+	}
+
+	if len(acc.Email) <= 0 {
+		err = MissingEmail.New("domain definition lacks email")
+		return
+	}
+
+	acc.KeyType = DEFAULT_KEY_TYPE
+	if len(raw.KeyType) > 0 {
+		acc.KeyType = raw.KeyType
+	}
+	if !VALID_KEY_TYPES[acc.KeyType] {
+		err = InvalidKeyType.New("invalid key type: %s", acc.KeyType)
+		return
 	}
 
 	dir := DEFAULT_DIRECTORY
@@ -45,8 +61,8 @@ func ValidateAccount(raw RawAccount) (a *Account, err error) {
 }
 
 type Authentication struct {
-	Method  string            `json:"method"`
-	Options map[string]string `json:"options"`
+	Method  AuthenticationMethod `json:"method"`
+	Options map[string]string    `json:"options"`
 }
 
 // ValidateAuthentication validates authentication parameters and sets
@@ -64,7 +80,15 @@ func ValidateAuthentication(raw Authentication) (a *Authentication, err error) {
 	}
 
 	// TODO: verify options based on the authentication method
-	auth.Options = raw.Options
+	auth.Options = DEFAULT_AUTHENTICATION_OPTIONS[auth.Method]
+	for key, val := range raw.Options {
+		if !VALID_AUTHENTICATION_OPTIONS[auth.Method][key] {
+			err = InvalidOption.New("unexpected option %s for method %s", key, auth.Method)
+			return
+		}
+
+		auth.Options[key] = val
+	}
 
 	a = &auth
 	return

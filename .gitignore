@@ -1,0 +1,4 @@
+example/state/*
+!example/state/.gitkeep
+.envrc
+.direnv

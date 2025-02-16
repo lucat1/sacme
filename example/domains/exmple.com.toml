@@ -1,7 +1,14 @@
-domain = "example.com"
+domain = "localhost"
 
 [account]
 email = "root@example.com"
+directory = "https://127.0.0.1:14000/dir"
+accept_tos = true
+
+[authentication]
+method = "http-01/standalone"
+[authentication.options]
+port = "5002"
 
 [[installs]]
 
