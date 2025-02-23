@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strconv"
 
+	fs "github.com/warpfork/go-fsx"
+
 	"github.com/pelletier/go-toml/v2"
 )
 
@@ -95,7 +97,8 @@ func ValidateAuthentication(raw Authentication) (a *Authentication, err error) {
 }
 
 type RawPathPerm struct {
-	Path  string `toml:"path"`
+	Path string `toml:"path"`
+	// TODO: rename from perm to mode
 	Perm  string `toml:"perm"`
 	Owner string `toml:"owner"`
 	Group string `toml:"group"`
@@ -103,7 +106,7 @@ type RawPathPerm struct {
 
 type PathPerm struct {
 	Path  string
-	Perm  int64
+	Perm  fs.FileMode
 	Owner *user.User
 	Group *user.Group
 }
@@ -119,11 +122,12 @@ func ValidatePathPerm(raw RawPathPerm) (p *PathPerm, err error) {
 		err = InvalidPath.Wrap(err, "could not convert install path to absolute")
 		return
 	}
-	perm.Perm, err = strconv.ParseInt(raw.Perm, 0, 0)
+	pp, err := strconv.ParseInt(raw.Perm, 0, 0)
 	if err != nil {
 		err = InvalidPerm.Wrap(err, "could not parse permission value (should start with 0)")
 		return
 	}
+	perm.Perm = fs.FileMode(pp)
 	perm.Owner, err = user.Lookup(raw.Owner)
 	if err != nil {
 		err = InvalidOwner.Wrap(err, "could not find owner user for install")

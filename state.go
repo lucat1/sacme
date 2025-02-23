@@ -113,10 +113,59 @@ func (state ACMEState) Certificates() (certs []*x509.Certificate, err error) {
 	return
 }
 
+type PathPermState struct {
+	Path string
+	Perm uint32
+	// the ID of the owner
+	Owner string
+	// the ID of the group
+	Group string
+}
+
+func (pp1 PathPermState) Equals(pp2 PathPermState) bool {
+	return pp1.Path == pp2.Path && pp1.Perm == pp2.Perm && pp1.Owner == pp2.Owner && pp1.Group == pp2.Group
+}
+
+type InstallState struct {
+	Key    *PathPermState
+	Crt    *PathPermState
+	CA     *PathPermState
+	Concat *PathPermState
+}
+
+func (i1 InstallState) Equals(i2 InstallState) bool {
+	if i1.Key != nil {
+		if i2.Key == nil || (*i1.Key) != (*i2.Key) {
+			return false
+		}
+	}
+
+	if i1.Crt != nil {
+		if i2.Crt == nil || (*i1.Crt) != (*i2.Crt) {
+			return false
+		}
+	}
+
+	if i1.CA != nil {
+		if i2.CA == nil || (*i1.CA) != (*i2.CA) {
+			return false
+		}
+	}
+
+	if i1.Concat != nil {
+		if i2.Concat == nil || (*i1.Concat) != (*i2.Concat) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // State holds the account/acme/installation state for a domain
 type State struct {
-	Account AccountState
-	ACME    ACMEState
+	Account  AccountState
+	ACME     ACMEState
+	Installs []InstallState
 }
 
 func (s *State) IsRegistered() bool {

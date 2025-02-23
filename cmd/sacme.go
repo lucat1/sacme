@@ -116,6 +116,21 @@ func main() {
 				slog.Error("error while saving updated state", "err", err)
 				os.Exit(8)
 			}
+
+			// TODO: remove all old install!
 		}
+
+		// if !newCertificate, bring install state up to definition
+		// find installs to remove: i.e., missing in new install definition
+		// next, install new definitions
+		// to find installs to remove:
+		// oi = set of old installs (state), ni = set of new installs
+		// for i in oi:
+		//   matches = false
+		//   for i' in ni unless matches:
+		//     if i matches i':
+		//       matches = true
+		//    if not matches:
+		//      remove!
 	}
 }

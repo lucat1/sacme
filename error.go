@@ -63,3 +63,10 @@ var EncodeState = errorx.NewType(StateNamespace, "encode_state", StoreTrait)
 
 var MissingCertificate = errorx.NewType(StateNamespace, "missing_certificate", CertificatesTrait)
 var ParseCertificates = errorx.NewType(StateNamespace, "parse_certificates", CertificatesTrait)
+
+var InstallNamespace = errorx.NewNamespace("install")
+var WriteTrait = errorx.RegisterTrait("write")
+
+var InstallFile = errorx.NewType(InstallNamespace, "install_file", WriteTrait)
+var WriteToFile = errorx.NewType(InstallNamespace, "write_to_file", WriteTrait)
+var UnfinishedWrite = errorx.NewType(InstallNamespace, "unfinished_write", WriteTrait)
