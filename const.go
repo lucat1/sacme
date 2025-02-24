@@ -3,7 +3,9 @@ package sacme
 import "time"
 
 const DOMAIN_FILE_SUFFIX = ".toml"
-const RENEW_DAYS_BEOFRE = 30 * 24 * time.Hour
+
+// const RENEW_DAYS_BEOFRE = 30 * 24 * time.Hour
+const RENEW_DAYS_BEOFRE = 45 * time.Second
 
 const DEFAULT_DIRECTORY = "https://acme-v02.api.letsencrypt.org/directory"
 const DEFAULT_DOMAIN_PATH = "/etc/sacme"

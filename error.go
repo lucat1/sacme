@@ -47,6 +47,7 @@ var AccountRegistration = errorx.NewType(ACMENamespace, "account_registraiton", 
 var ProviderHTTP01Standalone = errorx.NewType(ACMENamespace, "provider_http01_standalone", ObtainCertificateTrait)
 var ProviderSetup = errorx.NewType(ACMENamespace, "provider_setup", ObtainCertificateTrait)
 var CertificateObtain = errorx.NewType(ACMENamespace, "certificate_obtain", ObtainCertificateTrait)
+var CertificateRenew = errorx.NewType(ACMENamespace, "certificate_renew", ObtainCertificateTrait)
 
 // State erorrs
 var StateNamespace = errorx.NewNamespace("state")

@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
+	"slices"
 	"time"
 
 	"github.com/lucat1/sacme"
@@ -22,6 +24,38 @@ func checkForDuplicateDomains(domains []sacme.Domain) *string {
 	}
 
 	return nil
+}
+
+func obtainCertificate(domain sacme.Domain, state *sacme.State) {
+	slog.Info("obtaining certificate")
+
+	err := sacme.ObtainCertificate(domain, state)
+	if err != nil {
+		slog.Error("error while obtaining certificate with ACME", "err", err)
+		os.Exit(4)
+	}
+
+	slog.Info("obtained certificate")
+}
+
+func renewCertificate(domain sacme.Domain, state *sacme.State) {
+	slog.Info("renewing certificate")
+
+	err := sacme.RenewCertificate(domain, state)
+	if err != nil {
+		slog.Error("error while renewing certificate with ACME", "err", err)
+		os.Exit(7)
+	}
+
+	slog.Info("renewed certificate")
+}
+
+func removeUnmatchedInstalls(domain sacme.Domain, state *sacme.State) {
+	for _, i := range state.Installs {
+		matches := slices.ContainsFunc(domain.Installs, i.Matches)
+		fmt.Println("diocane match", matches)
+		os.Exit(69)
+	}
 }
 
 func main() {
@@ -74,16 +108,8 @@ func main() {
 
 		newCertificate := false
 		if state.ACME.Empty() {
-			slog.Info("obtaining certificate")
-
-			err = sacme.ObtainCertificate(domain, state)
-			if err != nil {
-				slog.Error("error while obtaining certificate with ACME", "err", err)
-				os.Exit(4)
-			}
-
+			obtainCertificate(domain, state)
 			newCertificate = true
-			slog.Info("obtained certificate")
 		}
 
 		certificates, err := state.ACME.Certificates()
@@ -96,17 +122,12 @@ func main() {
 		slog.Info("loaded certificate", "notBefore", certificate.NotBefore, "now", now, "notAfter", certificate.NotAfter)
 		remainingTime := certificate.NotAfter.Sub(now)
 
-		if remainingTime <= sacme.RENEW_DAYS_BEOFRE {
-			slog.Info("renewing certificate")
-
-			err = sacme.RenewCertificate(domain, state)
-			if err != nil {
-				slog.Error("error while renewing certificate with ACME", "err", err)
-				os.Exit(7)
-			}
-
+		if remainingTime < 0 {
+			obtainCertificate(domain, state)
 			newCertificate = true
-			slog.Info("renewed certificate")
+		} else if remainingTime <= sacme.RENEW_DAYS_BEOFRE {
+			renewCertificate(domain, state)
+			newCertificate = true
 		}
 
 		if newCertificate {
@@ -118,6 +139,7 @@ func main() {
 			}
 
 			// TODO: remove all old install!
+			removeUnmatchedInstalls(domain, state)
 		}
 
 		// if !newCertificate, bring install state up to definition

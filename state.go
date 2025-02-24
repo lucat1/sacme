@@ -15,6 +15,7 @@ import (
 	fs "github.com/warpfork/go-fsx"
 
 	"github.com/go-acme/lego/v4/certcrypto"
+	"github.com/go-acme/lego/v4/certificate"
 	"github.com/go-acme/lego/v4/registration"
 )
 
@@ -95,6 +96,30 @@ type ACMEState struct {
 	CSR               []byte
 }
 
+func (state ACMEState) ToResource() certificate.Resource {
+	return certificate.Resource{
+		Domain:            state.Domain,
+		CertURL:           state.CertURL,
+		CertStableURL:     state.CertStableURL,
+		PrivateKey:        state.PrivateKey,
+		Certificate:       state.Certificate,
+		IssuerCertificate: state.IssuerCertificate,
+		CSR:               state.CSR,
+	}
+}
+
+func NewACMEState(res *certificate.Resource) ACMEState {
+	return ACMEState{
+		Domain:            res.Domain,
+		CertURL:           res.CertURL,
+		CertStableURL:     res.CertStableURL,
+		PrivateKey:        res.PrivateKey,
+		Certificate:       res.Certificate,
+		IssuerCertificate: res.IssuerCertificate,
+		CSR:               res.CSR,
+	}
+}
+
 func (state ACMEState) Empty() bool {
 	return len(state.Certificate) <= 0
 }
@@ -122,8 +147,8 @@ type PathPermState struct {
 	Group string
 }
 
-func (pp1 PathPermState) Equals(pp2 PathPermState) bool {
-	return pp1.Path == pp2.Path && pp1.Perm == pp2.Perm && pp1.Owner == pp2.Owner && pp1.Group == pp2.Group
+func (pp1 PathPermState) Matches(pp2 PathPerm) bool {
+	return pp1 == pp2.State()
 }
 
 type InstallState struct {
@@ -133,27 +158,27 @@ type InstallState struct {
 	Concat *PathPermState
 }
 
-func (i1 InstallState) Equals(i2 InstallState) bool {
+func (i1 InstallState) Matches(i2 Install) bool {
 	if i1.Key != nil {
-		if i2.Key == nil || (*i1.Key) != (*i2.Key) {
+		if i2.Key == nil || !i1.Key.Matches(*i2.Key) {
 			return false
 		}
 	}
 
 	if i1.Crt != nil {
-		if i2.Crt == nil || (*i1.Crt) != (*i2.Crt) {
+		if i2.Crt == nil || !i1.Crt.Matches(*i2.Crt) {
 			return false
 		}
 	}
 
 	if i1.CA != nil {
-		if i2.CA == nil || (*i1.CA) != (*i2.CA) {
+		if i2.CA == nil || !i1.CA.Matches(*i2.CA) {
 			return false
 		}
 	}
 
 	if i1.Concat != nil {
-		if i2.Concat == nil || (*i1.Concat) != (*i2.Concat) {
+		if i2.Concat == nil || !i1.Concat.Matches(*i2.Concat) {
 			return false
 		}
 	}

@@ -25,6 +25,9 @@ func toKeyType(kt KeyType) certcrypto.KeyType {
 	}
 }
 
+// TODO: do we want to bundle? I think this depends on the install type
+const bundle = true
+
 func GetClient(domain Domain, state State) (client *lego.Client, err error) {
 	config := lego.NewConfig(&state.Account)
 	config.CADirURL = domain.Account.Directroy.String()
@@ -96,23 +99,13 @@ func ObtainCertificate(domain Domain, state *State) (err error) {
 
 	certificate, err := client.Certificate.Obtain(certificate.ObtainRequest{
 		Domains: []string{domain.Domain},
-		// TODO: do we want to bundle? I think this depends on the install type
-		Bundle: true,
+		Bundle:  bundle,
 	})
 	if err != nil {
 		err = CertificateObtain.Wrap(err, "could not obtain certifiate through ACME")
 		return
 	}
-	state.ACME = ACMEState{
-		Domain:        certificate.Domain,
-		CertURL:       certificate.CertURL,
-		CertStableURL: certificate.CertStableURL,
-
-		PrivateKey:        certificate.PrivateKey,
-		Certificate:       certificate.Certificate,
-		IssuerCertificate: certificate.IssuerCertificate,
-		CSR:               certificate.CSR,
-	}
+	state.ACME = NewACMEState(certificate)
 
 	return
 }
@@ -129,22 +122,14 @@ func RenewCertificate(domain Domain, state *State) (err error) {
 		return
 	}
 
-	// TODO: renew
-	// state.ACME = ACMEState{
-	// 	Domain:        certificate.Domain,
-	// 	CertURL:       certificate.CertURL,
-	// 	CertStableURL: certificate.CertStableURL,
-	//
-	// 	PrivateKey:        certificate.PrivateKey,
-	// 	Certificate:       certificate.Certificate,
-	// 	IssuerCertificate: certificate.IssuerCertificate,
-	// 	CSR:               certificate.CSR,
-	// }
-	// certificate, err := client.Certificate.Renew()
-	// if err != nil {
-	// 	err = CertificateObtain.Wrap(err, "could not obtain certifiate through ACME")
-	// 	return
-	// }
+	certificate, err := client.Certificate.RenewWithOptions(state.ACME.ToResource(), &certificate.RenewOptions{
+		Bundle: bundle,
+	})
+	if err != nil {
+		err = CertificateRenew.Wrap(err, "could not renew certifiate through ACME")
+		return
+	}
+	state.ACME = NewACMEState(certificate)
 
 	return
 }
