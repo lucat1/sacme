@@ -119,13 +119,14 @@ func main() {
 		}
 		certificate := certificates[0]
 		now := time.Now()
-		slog.Info("loaded certificate", "notBefore", certificate.NotBefore, "now", now, "notAfter", certificate.NotAfter)
-		remainingTime := certificate.NotAfter.Sub(now)
+		elapsedTime := now.Sub(certificate.NotBefore)
+		halfTime := certificate.NotAfter.Sub(certificate.NotBefore) / 2
+		slog.Info("loaded certificate", "notBefore", certificate.NotBefore, "now", now, "notAfter", certificate.NotAfter, "elapsedtime", elapsedTime, "halfTime", halfTime)
 
-		if remainingTime < 0 {
+		if elapsedTime < 0 {
 			obtainCertificate(domain, state)
 			newCertificate = true
-		} else if remainingTime <= sacme.RENEW_DAYS_BEOFRE {
+		} else if elapsedTime >= halfTime {
 			renewCertificate(domain, state)
 			newCertificate = true
 		}
