@@ -1,0 +1,28 @@
+Source: sacme
+Section: devel
+Priority: optional
+Maintainer: Luca Tagliavini <luca@teapot.ovh>
+Rules-Requires-Root: no
+Build-Depends: debhelper (>= 13.4),
+               debhelper-compat (= 13),
+               dh-sequence-golang,
+               golang-any,
+               golang-github-go-acme-lego-dev,
+               golang-github-hashicorp-go-retryablehttp,
+               golang-github-joomcode/errorx,
+Standards-Version: 4.6.2
+Homepage: https://github.com/lucat1/sacme
+Vcs-Git: https://github.com/lucat1/sacme
+XS-Go-Import-Path: github.com/lucat1/sacme
+Testsuite: autopkgtest-pkg-go
+
+Package: sacme
+Architecture: any
+Depends: dpkg-dev,
+         ${misc:Depends},
+         ${shlibs:Depends},
+Static-Built-Using: ${misc:Static-Built-Using},
+Description: Simple ACME client
+ Simple, declarative ACME client. Bulit on production grade libraries,
+ allows complex certificate storage and retrival configurations
+
