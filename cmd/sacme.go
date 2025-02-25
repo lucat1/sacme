@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log/slog"
 	"os"
 	"slices"
@@ -50,18 +49,28 @@ func renewCertificate(domain sacme.Domain, state *sacme.State) {
 	slog.Info("renewed certificate")
 }
 
-func removeUnmatchedInstalls(domain sacme.Domain, state *sacme.State) {
-	for _, i := range state.Installs {
-		matches := slices.ContainsFunc(domain.Installs, i.Matches)
-		fmt.Println("diocane match", matches)
-		os.Exit(69)
+func saveState(store *sacme.StateStore, domain sacme.Domain, state *sacme.State, cause string) {
+	slog.Info("saving state", "cause", cause)
+	err := store.Store(domain, state)
+	if err != nil {
+		slog.Error("error while saving updated state", "err", err)
+		os.Exit(8)
 	}
+
+	slog.Info("state saved", "cause", cause)
 }
 
 func main() {
 	domainsPath := flag.String("domains-path", sacme.DEFAULT_DOMAIN_PATH, "path containing domain definition files")
 	stateStorePath := flag.String("state-store-path", sacme.DEFAULT_STATE_STORE_PATH, "path containing the state of certificate renewal")
+	logLevel := flag.Int("log-level", sacme.DEFAULT_LOG_LEVEL, "verbosity of log output: debug (-4), info (0), warn (4), error (8)")
 	flag.Parse()
+
+	rootFS := osfs.DirFS("/")
+
+	slog := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: slog.Level(*logLevel),
+	}))
 
 	domains, err := sacme.LoadDomains(os.DirFS(*domainsPath))
 	if err != nil {
@@ -120,10 +129,11 @@ func main() {
 		certificate := certificates[0]
 		now := time.Now()
 		elapsedTime := now.Sub(certificate.NotBefore)
-		halfTime := certificate.NotAfter.Sub(certificate.NotBefore) / 2
+		duration := certificate.NotAfter.Sub(certificate.NotBefore)
+		halfTime := duration / 2
 		slog.Info("loaded certificate", "notBefore", certificate.NotBefore, "now", now, "notAfter", certificate.NotAfter, "elapsedtime", elapsedTime, "halfTime", halfTime)
 
-		if elapsedTime < 0 {
+		if elapsedTime >= duration {
 			obtainCertificate(domain, state)
 			newCertificate = true
 		} else if elapsedTime >= halfTime {
@@ -132,28 +142,52 @@ func main() {
 		}
 
 		if newCertificate {
-			slog.Info("saving state")
-			err = store.Store(domain, state)
-			if err != nil {
-				slog.Error("error while saving updated state", "err", err)
-				os.Exit(8)
-			}
-
-			// TODO: remove all old install!
-			removeUnmatchedInstalls(domain, state)
+			saveState(&store, domain, state, "new_certificate")
 		}
 
-		// if !newCertificate, bring install state up to definition
-		// find installs to remove: i.e., missing in new install definition
-		// next, install new definitions
-		// to find installs to remove:
-		// oi = set of old installs (state), ni = set of new installs
-		// for i in oi:
-		//   matches = false
-		//   for i' in ni unless matches:
-		//     if i matches i':
-		//       matches = true
-		//    if not matches:
-		//      remove!
+		installs := []sacme.InstallState{}
+		modifiedInstalls := false
+		if !newCertificate {
+			// If we haven't obtained a nwe certificate, then old installs
+			// may be still relevant. Here we filter out installs and remove old files
+			for _, i := range state.Installs {
+				matches := slices.ContainsFunc(domain.Installs, i.Matches)
+				slog.Debug("installed install matches", "install", i, "matches", matches)
+				if !matches {
+					err := i.Uninstall(rootFS)
+					if err != nil {
+						slog.Error("could not uninstall files", "err", err)
+						os.Exit(9)
+					}
+					slog.Info("uninstalled", "key", i.Key, "crt", i.Crt, "ca", i.CA, "concat", i.Concat)
+					modifiedInstalls = true
+				} else {
+					installs = append(installs, i)
+				}
+			}
+		}
+
+		// Install new installs
+		for _, i := range domain.Installs {
+			matches := slices.ContainsFunc(installs, i.Matches)
+			slog.Debug("defined install matches", "install", i, "matches", matches)
+			if !matches {
+				is, err := i.Install(rootFS, state)
+				if err != nil {
+					slog.Error("could not install files", "err", err)
+					os.Exit(10)
+				}
+				slog.Info("installed", "key", is.Key, "crt", is.Crt, "ca", is.CA, "concat", is.Concat)
+				modifiedInstalls = true
+				installs = append(installs, *is)
+			}
+		}
+
+		if modifiedInstalls {
+			state.Installs = installs
+			saveState(&store, domain, state, "install")
+		}
+
+		slog.Info("finished processing")
 	}
 }

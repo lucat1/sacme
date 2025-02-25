@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"math/big"
@@ -147,8 +148,9 @@ type PathPermState struct {
 	Group string
 }
 
-func (pp1 PathPermState) Matches(pp2 PathPerm) bool {
-	return pp1 == pp2.State()
+func (p1 PathPermState) Equals(p2 PathPermState) bool {
+	fmt.Println("checking for equality!")
+	return false
 }
 
 type InstallState struct {
@@ -156,34 +158,6 @@ type InstallState struct {
 	Crt    *PathPermState
 	CA     *PathPermState
 	Concat *PathPermState
-}
-
-func (i1 InstallState) Matches(i2 Install) bool {
-	if i1.Key != nil {
-		if i2.Key == nil || !i1.Key.Matches(*i2.Key) {
-			return false
-		}
-	}
-
-	if i1.Crt != nil {
-		if i2.Crt == nil || !i1.Crt.Matches(*i2.Crt) {
-			return false
-		}
-	}
-
-	if i1.CA != nil {
-		if i2.CA == nil || !i1.CA.Matches(*i2.CA) {
-			return false
-		}
-	}
-
-	if i1.Concat != nil {
-		if i2.Concat == nil || !i1.Concat.Matches(*i2.Concat) {
-			return false
-		}
-	}
-
-	return true
 }
 
 // State holds the account/acme/installation state for a domain
@@ -260,8 +234,8 @@ func (ss StateStore) Store(domain Domain, state *State) (err error) {
 	}
 
 	defer handle.Close()
-	decoder := json.NewEncoder(handle.(io.Writer))
-	err = decoder.Encode(state)
+	encoder := json.NewEncoder(handle.(io.Writer))
+	err = encoder.Encode(state)
 	if err != nil {
 		err = EncodeState.Wrap(err, "invalid state content")
 		return
