@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/lucat1/sacme"
-	"github.com/warpfork/go-fsx/osfs"
+	fs "github.com/spf13/afero"
 )
 
 // checkForDuplicateDomains checks if any domain definition are duplicate (i.e.,
 // are for the same domain name) and returns the duplicate record if found.
-func checkForDuplicateDomains(domains []sacme.Domain) *string {
+func checkForDuplicateDomains(slog *slog.Logger, domains []sacme.Domain) *string {
 	m := map[string]bool{}
 	for _, domain := range domains {
 		if m[domain.Domain] {
@@ -25,7 +25,7 @@ func checkForDuplicateDomains(domains []sacme.Domain) *string {
 	return nil
 }
 
-func obtainCertificate(domain sacme.Domain, state *sacme.State) {
+func obtainCertificate(slog *slog.Logger, domain sacme.Domain, state *sacme.State) {
 	slog.Info("obtaining certificate")
 
 	err := sacme.ObtainCertificate(domain, state)
@@ -37,7 +37,7 @@ func obtainCertificate(domain sacme.Domain, state *sacme.State) {
 	slog.Info("obtained certificate")
 }
 
-func renewCertificate(domain sacme.Domain, state *sacme.State) {
+func renewCertificate(slog *slog.Logger, domain sacme.Domain, state *sacme.State) {
 	slog.Info("renewing certificate")
 
 	err := sacme.RenewCertificate(domain, state)
@@ -49,7 +49,7 @@ func renewCertificate(domain sacme.Domain, state *sacme.State) {
 	slog.Info("renewed certificate")
 }
 
-func saveState(store *sacme.StateStore, domain sacme.Domain, state *sacme.State, cause string) {
+func saveState(slog *slog.Logger, store *sacme.StateStore, domain sacme.Domain, state *sacme.State, cause string) {
 	slog.Info("saving state", "cause", cause)
 	err := store.Store(domain, state)
 	if err != nil {
@@ -60,13 +60,22 @@ func saveState(store *sacme.StateStore, domain sacme.Domain, state *sacme.State,
 	slog.Info("state saved", "cause", cause)
 }
 
+func uninstall(slog *slog.Logger, i sacme.InstallState, rootFS fs.Fs) {
+	err := i.Uninstall(rootFS)
+	if err != nil {
+		slog.Error("could not uninstall files", "err", err)
+		os.Exit(9)
+	}
+	slog.Info("uninstalled", "key", i.Key, "crt", i.Crt, "ca", i.CA, "concat", i.Concat)
+}
+
 func main() {
 	domainsPath := flag.String("domains-path", sacme.DEFAULT_DOMAIN_PATH, "path containing domain definition files")
 	stateStorePath := flag.String("state-store-path", sacme.DEFAULT_STATE_STORE_PATH, "path containing the state of certificate renewal")
 	logLevel := flag.Int("log-level", sacme.DEFAULT_LOG_LEVEL, "verbosity of log output: debug (-4), info (0), warn (4), error (8)")
 	flag.Parse()
 
-	rootFS := osfs.DirFS("/")
+	rootFS := fs.NewOsFs()
 
 	slog := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 		Level: slog.Level(*logLevel),
@@ -83,13 +92,13 @@ func main() {
 		slog.Info("definition for", "domain", domain.Domain, "account", domain.Account, "authentication", domain.Authentication)
 	}
 
-	duplicate := checkForDuplicateDomains(domains)
+	duplicate := checkForDuplicateDomains(slog, domains)
 	if duplicate != nil {
 		slog.Error("duplicate domain", "domain", *duplicate)
 		os.Exit(2)
 	}
 
-	store := sacme.NewStateStore(osfs.DirFS(*stateStorePath))
+	store := sacme.NewStateStore(fs.NewBasePathFs(rootFS, *stateStorePath))
 	for _, domain := range domains {
 		slog := slog.With("domain", domain.Domain)
 
@@ -117,7 +126,7 @@ func main() {
 
 		newCertificate := false
 		if state.ACME.Empty() {
-			obtainCertificate(domain, state)
+			obtainCertificate(slog, domain, state)
 			newCertificate = true
 		}
 
@@ -134,15 +143,15 @@ func main() {
 		slog.Info("loaded certificate", "notBefore", certificate.NotBefore, "now", now, "notAfter", certificate.NotAfter, "elapsedtime", elapsedTime, "halfTime", halfTime)
 
 		if elapsedTime >= duration {
-			obtainCertificate(domain, state)
+			obtainCertificate(slog, domain, state)
 			newCertificate = true
 		} else if elapsedTime >= halfTime {
-			renewCertificate(domain, state)
+			renewCertificate(slog, domain, state)
 			newCertificate = true
 		}
 
 		if newCertificate {
-			saveState(&store, domain, state, "new_certificate")
+			saveState(slog, &store, domain, state, "new_certificate")
 		}
 
 		installs := []sacme.InstallState{}
@@ -154,18 +163,21 @@ func main() {
 				matches := slices.ContainsFunc(domain.Installs, i.Matches)
 				slog.Debug("installed install matches", "install", i, "matches", matches)
 				if !matches {
-					err := i.Uninstall(rootFS)
-					if err != nil {
-						slog.Error("could not uninstall files", "err", err)
-						os.Exit(9)
-					}
-					slog.Info("uninstalled", "key", i.Key, "crt", i.Crt, "ca", i.CA, "concat", i.Concat)
+					uninstall(slog, i, rootFS)
 					modifiedInstalls = true
 				} else {
 					installs = append(installs, i)
 				}
 			}
+		} else {
+			// If we've obtained a new certificate all old files can be uninstalled
+			for _, i := range state.Installs {
+				uninstall(slog, i, rootFS)
+				modifiedInstalls = true
+			}
 		}
+
+		slog.Debug("valid current install paths", "count", len(installs))
 
 		// Install new installs
 		for _, i := range domain.Installs {
@@ -185,7 +197,7 @@ func main() {
 
 		if modifiedInstalls {
 			state.Installs = installs
-			saveState(&store, domain, state, "install")
+			saveState(slog, &store, domain, state, "install")
 		}
 
 		slog.Info("finished processing")

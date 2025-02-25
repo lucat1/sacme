@@ -13,7 +13,7 @@ import (
 	"math/big"
 	"os"
 
-	fs "github.com/warpfork/go-fsx"
+	fs "github.com/spf13/afero"
 
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
@@ -172,10 +172,10 @@ func (s *State) IsRegistered() bool {
 }
 
 type StateStore struct {
-	fs fs.FS
+	fs fs.Fs
 }
 
-func NewStateStore(f fs.FS) StateStore {
+func NewStateStore(f fs.Fs) StateStore {
 	return StateStore{fs: f}
 }
 
@@ -227,7 +227,7 @@ func (ss StateStore) Load(domain Domain) (s *State, err error) {
 }
 
 func (ss StateStore) Store(domain Domain, state *State) (err error) {
-	handle, err := fs.OpenFile(ss.fs, domain.Domain, os.O_CREATE|os.O_WRONLY, 0640)
+	handle, err := ss.fs.OpenFile(domain.Domain, os.O_CREATE|os.O_WRONLY, 0640)
 	if err != nil {
 		err = OpenStoreFile.Wrap(err, "could not open state file for writing for domain %s", domain.Domain)
 		return

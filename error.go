@@ -69,5 +69,6 @@ var InstallNamespace = errorx.NewNamespace("install")
 var WriteTrait = errorx.RegisterTrait("write")
 
 var InstallFile = errorx.NewType(InstallNamespace, "install_file", WriteTrait)
+var RemoveFile = errorx.NewType(InstallNamespace, "remove_file", WriteTrait)
 var WriteToFile = errorx.NewType(InstallNamespace, "write_to_file", WriteTrait)
 var UnfinishedWrite = errorx.NewType(InstallNamespace, "unfinished_write", WriteTrait)

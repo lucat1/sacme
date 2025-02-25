@@ -1,7 +1,7 @@
 package sacme
 
 import (
-	fs "github.com/warpfork/go-fsx"
+	"io/fs"
 	"strings"
 )
 

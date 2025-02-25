@@ -2,11 +2,10 @@ package sacme
 
 import (
 	"net/url"
+	"os"
 	"os/user"
 	"path/filepath"
 	"strconv"
-
-	fs "github.com/warpfork/go-fsx"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -106,7 +105,7 @@ type RawPathPerm struct {
 
 type PathPerm struct {
 	Path  string
-	Perm  fs.FileMode
+	Perm  os.FileMode
 	Owner *user.User
 	Group *user.Group
 }
@@ -127,7 +126,7 @@ func ValidatePathPerm(raw RawPathPerm) (p *PathPerm, err error) {
 		err = InvalidPerm.Wrap(err, "could not parse permission value (should start with 0)")
 		return
 	}
-	perm.Perm = fs.FileMode(pp)
+	perm.Perm = os.FileMode(pp)
 	perm.Owner, err = user.Lookup(raw.Owner)
 	if err != nil {
 		err = InvalidOwner.Wrap(err, "could not find owner user for install")

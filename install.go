@@ -2,11 +2,10 @@ package sacme
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"os"
 
-	fs "github.com/warpfork/go-fsx"
+	fs "github.com/spf13/afero"
 )
 
 func (pp1 PathPermState) Matches(pp2 PathPerm) bool {
@@ -15,21 +14,20 @@ func (pp1 PathPermState) Matches(pp2 PathPerm) bool {
 
 func (i1 InstallState) Matches(i2 Install) bool {
 	result := true
-	result = result
 	if i1.Key != nil {
-		result = result && (i2.Key != nil || i1.Key.Matches(*i2.Key))
+		result = result && i2.Key != nil && i1.Key.Matches(*i2.Key)
 	}
 
 	if i1.Crt != nil {
-		result = result && (i2.Crt != nil || i1.Crt.Matches(*i2.Crt))
+		result = result && i2.Crt != nil && i1.Crt.Matches(*i2.Crt)
 	}
 
 	if i1.CA != nil {
-		result = result && (i2.CA != nil || i1.CA.Matches(*i2.CA))
+		result = result && i2.CA != nil && i1.CA.Matches(*i2.CA)
 	}
 
 	if i1.Concat != nil {
-		result = result && (i2.Concat != nil || i1.Concat.Matches(*i2.Concat))
+		result = result && i2.Concat != nil && i1.Concat.Matches(*i2.Concat)
 	}
 
 	return result
@@ -42,26 +40,26 @@ func (pp1 PathPerm) Matches(pp2 PathPermState) bool {
 func (i1 Install) Matches(i2 InstallState) bool {
 	result := true
 	if i1.Key != nil {
-		result = result && (i2.Key != nil && i1.Key.Matches(*i2.Key))
+		result = result && i2.Key != nil && i1.Key.Matches(*i2.Key)
 	}
 
 	if i1.Crt != nil {
-		result = result && (i2.Crt != nil && i1.Crt.Matches(*i2.Crt))
+		result = result && i2.Crt != nil && i1.Crt.Matches(*i2.Crt)
 	}
 
 	if i1.CA != nil {
-		result = result && (i2.CA != nil && i1.CA.Matches(*i2.CA))
+		result = result && i2.CA != nil && i1.CA.Matches(*i2.CA)
 	}
 
 	if i1.Concat != nil {
-		result = result && (i2.Concat != nil && i1.Concat.Matches(*i2.Concat))
+		result = result && i2.Concat != nil && i1.Concat.Matches(*i2.Concat)
 	}
 
 	return result
 }
 
-func writeFile(f fs.FS, pp PathPerm, content []byte, installType string) (err error) {
-	handle, err := fs.OpenFile(f, pp.Path, os.O_CREATE|os.O_WRONLY, fs.FileMode(pp.Perm))
+func writeFile(f fs.Fs, pp PathPerm, content []byte, installType string) (err error) {
+	handle, err := f.OpenFile(pp.Path, os.O_CREATE|os.O_WRONLY, os.FileMode(pp.Perm))
 	if err != nil {
 		err = InstallFile.Wrap(err, "could not open file %s for writing %s", pp.Path, installType)
 		return
@@ -83,6 +81,16 @@ func writeFile(f fs.FS, pp PathPerm, content []byte, installType string) (err er
 	return
 }
 
+func removeFile(f fs.Fs, path string) (err error) {
+	err = f.Remove(path)
+	if err != nil {
+		err = RemoveFile.Wrap(err, "could not remove file %s", path)
+		return
+	}
+
+	return
+}
+
 func (pp PathPerm) State() PathPermState {
 	return PathPermState{
 		Path:  pp.Path,
@@ -92,7 +100,7 @@ func (pp PathPerm) State() PathPermState {
 	}
 }
 
-func (i Install) Install(f fs.FS, state *State) (isp *InstallState, err error) {
+func (i Install) Install(f fs.Fs, state *State) (isp *InstallState, err error) {
 	var is InstallState
 
 	if i.Key != nil {
@@ -135,7 +143,30 @@ func (i Install) Install(f fs.FS, state *State) (isp *InstallState, err error) {
 	return
 }
 
-func (i *InstallState) Uninstall(f fs.FS) (err error) {
-	err = errors.New("TODO")
+func (i *InstallState) Uninstall(f fs.Fs) (err error) {
+	if i.Key != nil {
+		if err = removeFile(f, i.Key.Path); err != nil {
+			return
+		}
+	}
+
+	if i.Crt != nil {
+		if err = removeFile(f, i.Crt.Path); err != nil {
+			return
+		}
+	}
+
+	if i.CA != nil {
+		if err = removeFile(f, i.CA.Path); err != nil {
+			return
+		}
+	}
+
+	if i.Concat != nil {
+		if err = removeFile(f, i.Concat.Path); err != nil {
+			return
+		}
+	}
+
 	return
 }
