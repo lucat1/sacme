@@ -11,5 +11,5 @@ $ pebble -config ./example/pebble.json
 Then, you can run sacme with the following command:
 
 ```sh
-$ SSL_CERT_FILE=$PWD/example/pebble.minica.pem go run ./cmd/sacme.go -domains-path ./example/domains -state-store-path ./example/state
+$ SSL_CERT_FILE=$PWD/example/pebble.minica.pem go run ./cmd/sacme -domains-path ./example/domains -state-store-path ./example/state
 ```

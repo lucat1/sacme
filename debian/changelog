@@ -1,3 +1,11 @@
+sacme (0.2.3-1) UNRELEASED; urgency=medium
+
+  * Restructured cmd folder so that the package binary is properly installed
+    as sacme, not as cmd.
+  * Added a directive to create the /etc/sacme directory.
+
+ -- Luca Tagliavini <luca@teapot.ovh>  Sun, 02 Mar 2025 12:26:13 +0000
+
 sacme (0.2.2-1) UNRELEASED; urgency=medium
 
   * Downgrade golang.org/exp dependency to build on debian bookworm
