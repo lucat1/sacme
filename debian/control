@@ -9,9 +9,9 @@ Build-Depends: debhelper (>= 13.4),
                golang-any,
                golang-github-go-acme-lego-dev,
                golang-github-hashicorp-go-retryablehttp-dev,
-               golang-github-joomcode-errorx-dev,
                golang-github-spf13-afero-dev,
                golang-github-stretchr-testify-dev,
+               golang-github-pelletier-go-toml.v2-dev,
 Standards-Version: 4.6.2
 Homepage: https://github.com/lucat1/sacme
 Vcs-Git: https://github.com/lucat1/sacme

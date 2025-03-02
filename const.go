@@ -1,6 +1,6 @@
 package sacme
 
-import "log/slog"
+import "golang.org/x/exp/slog"
 
 const DOMAIN_FILE_SUFFIX = ".toml"
 

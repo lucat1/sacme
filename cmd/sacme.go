@@ -2,14 +2,30 @@ package main
 
 import (
 	"flag"
-	"log/slog"
+	"golang.org/x/exp/slog"
 	"os"
-	"slices"
 	"time"
 
 	"github.com/lucat1/sacme"
 	fs "github.com/spf13/afero"
 )
+
+// Taken from go builtin's "slices" module, which is not available in Go1.19
+// Copyright 2021 The Go Authors. All rights reserved.
+func IndexFunc[S ~[]E, E any](s S, f func(E) bool) int {
+	for i := range s {
+		if f(s[i]) {
+			return i
+		}
+	}
+	return -1
+}
+
+func ContainsFunc[S ~[]E, E any](s S, f func(E) bool) bool {
+	return IndexFunc(s, f) >= 0
+}
+
+// End of section copied from go's slices module
 
 // checkForDuplicateDomains checks if any domain definition are duplicate (i.e.,
 // are for the same domain name) and returns the duplicate record if found.
@@ -160,7 +176,7 @@ func main() {
 			// If we haven't obtained a nwe certificate, then old installs
 			// may be still relevant. Here we filter out installs and remove old files
 			for _, i := range state.Installs {
-				matches := slices.ContainsFunc(domain.Installs, i.Matches)
+				matches := ContainsFunc(domain.Installs, i.Matches)
 				slog.Debug("installed install matches", "install", i, "matches", matches)
 				if !matches {
 					uninstall(slog, i, rootFS)
@@ -181,7 +197,7 @@ func main() {
 
 		// Install new installs
 		for _, i := range domain.Installs {
-			matches := slices.ContainsFunc(installs, i.Matches)
+			matches := ContainsFunc(installs, i.Matches)
 			slog.Debug("defined install matches", "install", i, "matches", matches)
 			if !matches {
 				is, err := i.Install(rootFS, state)

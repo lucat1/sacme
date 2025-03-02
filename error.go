@@ -1,74 +1,55 @@
 package sacme
 
-import "github.com/joomcode/errorx"
+import "errors"
 
-// Domain parsing errors/namespace/traits
-var DomainNamespace = errorx.NewNamespace("domain")
-var ValidateDomainTrait = errorx.RegisterTrait("validate_domain")
-var ParseDomainTrait = errorx.RegisterTrait("parse_domain")
+// Domain parsing errors
+var MissingEmail = errors.New("missing_email")
+var InvalidKeyType = errors.New("invalid_key_type")
+var InvalidDirectory = errors.New("invalid_directory")
 
-var MissingEmail = errorx.NewType(DomainNamespace, "missing_email", ValidateDomainTrait)
-var InvalidKeyType = errorx.NewType(DomainNamespace, "invalid_key_type", ValidateDomainTrait)
-var InvalidDirectory = errorx.NewType(DomainNamespace, "invalid_directory", ValidateDomainTrait)
+var InvalidMethod = errors.New("invalid_method")
+var InvalidOption = errors.New("invalid_option")
 
-var InvalidMethod = errorx.NewType(DomainNamespace, "invalid_method", ValidateDomainTrait)
-var InvalidOption = errorx.NewType(DomainNamespace, "invalid_option", ValidateDomainTrait)
+var InvalidPath = errors.New("invalid_path")
+var InvalidPerm = errors.New("invalid_perm")
+var InvalidOwner = errors.New("invalid_owner")
+var InvalidGroup = errors.New("invalid_group")
 
-var InvalidPath = errorx.NewType(DomainNamespace, "invalid_path", ValidateDomainTrait)
-var InvalidPerm = errorx.NewType(DomainNamespace, "invalid_perm", ValidateDomainTrait)
-var InvalidOwner = errorx.NewType(DomainNamespace, "invalid_owner", ValidateDomainTrait)
-var InvalidGroup = errorx.NewType(DomainNamespace, "invalid_group", ValidateDomainTrait)
+var InvalidAccount = errors.New("invaild_account")
+var InvalidAuthentication = errors.New("invaild_authentication")
+var InvalidInstall = errors.New("invaild_install")
+var InvalidDomain = errors.New("invaild_domain")
 
-var InvalidAccount = errorx.NewType(DomainNamespace, "invaild_account", ValidateDomainTrait)
-var InvalidAuthentication = errorx.NewType(DomainNamespace, "invaild_authentication", ValidateDomainTrait)
-var InvalidInstall = errorx.NewType(DomainNamespace, "invaild_install", ValidateDomainTrait)
-var InvalidDomain = errorx.NewType(DomainNamespace, "invaild_domain", ValidateDomainTrait)
-
-var InvalidRawDomain = errorx.NewType(DomainNamespace, "invaild_raw_domain", ParseDomainTrait)
+var InvalidRawDomain = errors.New("invaild_raw_domain")
 
 // Loading multiple domains files from the configuration directory
-var DomainsNamespace = errorx.NewNamespace("domains")
-var LoadDomainsTrait = errorx.RegisterTrait("load_domains")
-
-var ReadDomainsDirectory = errorx.NewType(DomainsNamespace, "read_domains_directory", LoadDomainsTrait)
-var ReadDomainFile = errorx.NewType(DomainsNamespace, "read_domain_file", LoadDomainsTrait)
-var LoadDomain = errorx.NewType(DomainsNamespace, "load_domain", LoadDomainsTrait)
+var ReadDomainsDirectory = errors.New("read_domains_directory")
+var ReadDomainFile = errors.New("read_domain_file")
+var LoadDomain = errors.New("load_domain")
 
 // ACME errors
-var ACMENamespace = errorx.NewNamespace("acme")
-var RegisterAccountTrait = errorx.RegisterTrait("register_account")
-var ObtainCertificateTrait = errorx.RegisterTrait("obtain_certificate")
+var CreateClient = errors.New("create_client")
 
-var CreateClient = errorx.NewType(ACMENamespace, "create_client", RegisterAccountTrait)
+var AccountAlreadyRegistered = errors.New("account_already_registered")
+var AccountRegistration = errors.New("account_registraiton")
 
-var AccountAlreadyRegistered = errorx.NewType(ACMENamespace, "account_already_registered", RegisterAccountTrait)
-var AccountRegistration = errorx.NewType(ACMENamespace, "account_registraiton", RegisterAccountTrait)
-
-var ProviderHTTP01Standalone = errorx.NewType(ACMENamespace, "provider_http01_standalone", ObtainCertificateTrait)
-var ProviderSetup = errorx.NewType(ACMENamespace, "provider_setup", ObtainCertificateTrait)
-var CertificateObtain = errorx.NewType(ACMENamespace, "certificate_obtain", ObtainCertificateTrait)
-var CertificateRenew = errorx.NewType(ACMENamespace, "certificate_renew", ObtainCertificateTrait)
+var ProviderHTTP01Standalone = errors.New("provider_http01_standalone")
+var ProviderSetup = errors.New("provider_setup")
+var CertificateObtain = errors.New("certificate_obtain")
+var CertificateRenew = errors.New("certificate_renew")
 
 // State erorrs
-var StateNamespace = errorx.NewNamespace("state")
-var LoadTrait = errorx.RegisterTrait("load")
-var StoreTrait = errorx.RegisterTrait("store")
-var CertificatesTrait = errorx.RegisterTrait("certificates")
+var GenerateKey = errors.New("generate_key")
+var NewStateError = errors.New("new_state")
+var DecodeState = errors.New("decode_state")
 
-var GenerateKey = errorx.NewType(StateNamespace, "generate_key", LoadTrait)
-var NewStateError = errorx.NewType(StateNamespace, "new_state", LoadTrait)
-var DecodeState = errorx.NewType(StateNamespace, "decode_state", LoadTrait)
+var OpenStoreFile = errors.New("open_store_file")
+var EncodeState = errors.New("encode_state")
 
-var OpenStoreFile = errorx.NewType(StateNamespace, "open_store_file", StoreTrait)
-var EncodeState = errorx.NewType(StateNamespace, "encode_state", StoreTrait)
+var MissingCertificate = errors.New("missing_certificate")
+var ParseCertificates = errors.New("parse_certificates")
 
-var MissingCertificate = errorx.NewType(StateNamespace, "missing_certificate", CertificatesTrait)
-var ParseCertificates = errorx.NewType(StateNamespace, "parse_certificates", CertificatesTrait)
-
-var InstallNamespace = errorx.NewNamespace("install")
-var WriteTrait = errorx.RegisterTrait("write")
-
-var InstallFile = errorx.NewType(InstallNamespace, "install_file", WriteTrait)
-var RemoveFile = errorx.NewType(InstallNamespace, "remove_file", WriteTrait)
-var WriteToFile = errorx.NewType(InstallNamespace, "write_to_file", WriteTrait)
-var UnfinishedWrite = errorx.NewType(InstallNamespace, "unfinished_write", WriteTrait)
+var InstallFile = errors.New("install_file")
+var RemoveFile = errors.New("remove_file")
+var WriteToFile = errors.New("write_to_file")
+var UnfinishedWrite = errors.New("unfinished_write")

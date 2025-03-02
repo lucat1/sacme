@@ -8,8 +8,8 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/exp/slog"
 	"io"
-	"log/slog"
 	"math/big"
 	"os"
 
@@ -127,12 +127,12 @@ func (state ACMEState) Empty() bool {
 
 func (state ACMEState) Certificates() (certs []*x509.Certificate, err error) {
 	if state.Empty() {
-		err = MissingCertificate.New("requested certificate list for an ACME state which is missing certificates")
+		err = fmt.Errorf("%w: requested certificate list for an ACME state which is missing certificates", MissingCertificate)
 		return
 	}
 	certs, err = certcrypto.ParsePEMBundle(state.Certificate)
 	if err != nil {
-		err = ParseCertificates.Wrap(err, "could not parse certificate bundle as x509")
+		err = fmt.Errorf("%w: could not parse certificate bundle as x509: %w", ParseCertificates, err)
 		return
 	}
 
@@ -188,7 +188,7 @@ func NewState(domain Domain) (s *State, err error) {
 
 	state.Account.Key, err = NewPrivateKey()
 	if err != nil {
-		err = GenerateKey.Wrap(err, "unable to generate account key")
+		err = fmt.Errorf("%w: unable to generate account key: %w", GenerateKey, err)
 		return
 	}
 
@@ -205,7 +205,7 @@ func (ss StateStore) Load(domain Domain) (s *State, err error) {
 		var e error
 		s, e = NewState(domain)
 		if e != nil {
-			err = NewStateError.Wrap(err, "could not initialize a new state for domain %s", domain.Domain)
+			err = fmt.Errorf("%w: could not initialize a new state for domain %s: %w", NewStateError, domain.Domain, err)
 			return
 		}
 
@@ -218,7 +218,7 @@ func (ss StateStore) Load(domain Domain) (s *State, err error) {
 	decoder := json.NewDecoder(handle)
 	err = decoder.Decode(&state)
 	if err != nil {
-		err = DecodeState.Wrap(err, "invalid state content")
+		err = fmt.Errorf("%w: invalid state content: %w", DecodeState, err)
 		return
 	}
 
@@ -229,7 +229,7 @@ func (ss StateStore) Load(domain Domain) (s *State, err error) {
 func (ss StateStore) Store(domain Domain, state *State) (err error) {
 	handle, err := ss.fs.OpenFile(domain.Domain, os.O_CREATE|os.O_WRONLY, 0640)
 	if err != nil {
-		err = OpenStoreFile.Wrap(err, "could not open state file for writing for domain %s", domain.Domain)
+		err = fmt.Errorf("%w: could not open state file for writing for domain %s: %w", OpenStoreFile, domain.Domain, err)
 		return
 	}
 
@@ -237,7 +237,7 @@ func (ss StateStore) Store(domain Domain, state *State) (err error) {
 	encoder := json.NewEncoder(handle.(io.Writer))
 	err = encoder.Encode(state)
 	if err != nil {
-		err = EncodeState.Wrap(err, "invalid state content")
+		err = fmt.Errorf("%w: invalid state content: %w", EncodeState, err)
 		return
 	}
 
