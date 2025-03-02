@@ -1,3 +1,9 @@
+sacme (0.2.4-2) UNRELEASED; urgency=medium
+
+  * Report when no changes have been applied.
+
+ -- Luca Tagliavini <luca@teapot.ovh>  Sun, 02 Mar 2025 14:51:12 +0000
+
 sacme (0.2.3-2) UNRELEASED; urgency=medium
 
   * Added systemd service and timer to run sacme. By default the timer runs
