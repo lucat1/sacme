@@ -1,0 +1,12 @@
+[Unit]
+Description=Scheduled execution of sacme ACME client
+Documentation=https://github.com/lucat1/sacme
+Requires=sacme.service
+
+[Timer]
+OnCalendar=*-*-* 00,12:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

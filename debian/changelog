@@ -1,3 +1,10 @@
+sacme (0.2.3-2) UNRELEASED; urgency=medium
+
+  * Added systemd service and timer to run sacme. By default the timer runs
+    twice a day.
+
+ -- Luca Tagliavini <luca@teapot.ovh>  Sun, 02 Mar 2025 12:51:32 +0000
+
 sacme (0.2.3-1) UNRELEASED; urgency=medium
 
   * Restructured cmd folder so that the package binary is properly installed

@@ -22,7 +22,8 @@ XS-Go-Import-Path: github.com/lucat1/sacme
 Package: sacme
 Architecture: any
 Depends: ${misc:Depends},
-         ${shlibs:Depends}
+         ${shlibs:Depends},
+         systemd
 Built-Using: ${misc:Built-Using}
 Description: Simple ACME client
  Simple, declarative ACME client. Bulit on production grade libraries,
