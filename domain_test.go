@@ -27,6 +27,9 @@ domain = "example.com"
 email = "root@example.com"
 
 [[installs]]
+hooks = [
+  "true"
+]
 
 [installs.key]
 path = "/test/path.key"

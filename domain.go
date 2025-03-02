@@ -147,6 +147,7 @@ type RawInstall struct {
 	Crt    *RawPathPerm `json:"crt"`
 	CA     *RawPathPerm `json:"ca"`
 	Concat *RawPathPerm `json:"concat"`
+	Hooks  []string     `json:"hooks"`
 }
 
 type Install struct {
@@ -154,12 +155,15 @@ type Install struct {
 	Crt    *PathPerm
 	CA     *PathPerm
 	Concat *PathPerm
+	Hooks  []string
 }
 
 // PraseInstall parses a RawInstall into an Install struct by validating all
 // RawPathPerm structs
 func ValidateInstall(raw RawInstall) (i *Install, err error) {
-	var inst Install
+	inst := Install{
+		Hooks: raw.Hooks,
+	}
 
 	if raw.Key != nil {
 		inst.Key, err = ValidatePathPerm(*raw.Key)

@@ -11,6 +11,10 @@ method = "http-01/standalone"
 port = "5002"
 
 [[installs]]
+hooks = [
+  "true",
+  "echo hi"
+]
 
 [installs.key]
 path = "/tmp/path.key"

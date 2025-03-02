@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
-	"golang.org/x/exp/slog"
 	"os"
+	"os/exec"
 	"time"
+
+	"golang.org/x/exp/slog"
 
 	"github.com/lucat1/sacme"
 	fs "github.com/spf13/afero"
@@ -29,7 +31,7 @@ func ContainsFunc[S ~[]E, E any](s S, f func(E) bool) bool {
 
 // checkForDuplicateDomains checks if any domain definition are duplicate (i.e.,
 // are for the same domain name) and returns the duplicate record if found.
-func checkForDuplicateDomains(slog *slog.Logger, domains []sacme.Domain) *string {
+func checkForDuplicateDomains(domains []sacme.Domain) *string {
 	m := map[string]bool{}
 	for _, domain := range domains {
 		if m[domain.Domain] {
@@ -88,6 +90,7 @@ func uninstall(slog *slog.Logger, i sacme.InstallState, rootFS fs.Fs) {
 func main() {
 	domainsPath := flag.String("domains-path", sacme.DEFAULT_DOMAIN_PATH, "path containing domain definition files")
 	stateStorePath := flag.String("state-store-path", sacme.DEFAULT_STATE_STORE_PATH, "path containing the state of certificate renewal")
+	skipHooks := flag.Bool("skip-hooks", sacme.DEFAULT_SKIP_HOOKS, "wether to skip install hooks")
 	// TODO: when slog is upgraded, restore the logic to set the log level
 	// logLevel := flag.Int("log-level", sacme.DEFAULT_LOG_LEVEL, "verbosity of log output: debug (-4), info (0), warn (4), error (8)")
 	flag.Parse()
@@ -110,7 +113,7 @@ func main() {
 		slog.Info("definition for", "domain", domain.Domain, "account", domain.Account, "authentication", domain.Authentication)
 	}
 
-	duplicate := checkForDuplicateDomains(&slog, domains)
+	duplicate := checkForDuplicateDomains(domains)
 	if duplicate != nil {
 		slog.Error("duplicate domain", nil, "domain", *duplicate)
 		os.Exit(2)
@@ -211,6 +214,25 @@ func main() {
 				slog.Info("installed", "key", is.Key, "crt", is.Crt, "ca", is.CA, "concat", is.Concat)
 				modifiedInstalls = true
 				installs = append(installs, *is)
+
+				if len(i.Hooks) > 0 {
+					if *skipHooks {
+						slog.Info("avoiding running hooks", "hooks", i.Hooks)
+					} else {
+						slog.Info("running hooks for install", "hooks", i.Hooks)
+						for _, hook := range i.Hooks {
+							slog := slog.With("hook", hook)
+							cmd := exec.Command(sacme.DEFAULT_SHELL, "-c", hook)
+							stdout, err := cmd.Output()
+							if err != nil {
+								slog.Error("error while running hook", err)
+								os.Exit(11)
+							}
+
+							slog.Info("ran hook", "stdout", string(stdout))
+						}
+					}
+				}
 			}
 		}
 
