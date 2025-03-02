@@ -132,7 +132,7 @@ func (state ACMEState) Certificates() (certs []*x509.Certificate, err error) {
 	}
 	certs, err = certcrypto.ParsePEMBundle(state.Certificate)
 	if err != nil {
-		err = fmt.Errorf("%w: could not parse certificate bundle as x509: %w", ParseCertificates, err)
+		err = fmt.Errorf("could not parse certificate bundle as x509: %w", err)
 		return
 	}
 
@@ -188,7 +188,7 @@ func NewState(domain Domain) (s *State, err error) {
 
 	state.Account.Key, err = NewPrivateKey()
 	if err != nil {
-		err = fmt.Errorf("%w: unable to generate account key: %w", GenerateKey, err)
+		err = fmt.Errorf("unable to generate account key: %w", err)
 		return
 	}
 
@@ -205,7 +205,7 @@ func (ss StateStore) Load(domain Domain) (s *State, err error) {
 		var e error
 		s, e = NewState(domain)
 		if e != nil {
-			err = fmt.Errorf("%w: could not initialize a new state for domain %s: %w", NewStateError, domain.Domain, err)
+			err = fmt.Errorf("could not initialize a new state for domain %s: %w", domain.Domain, err)
 			return
 		}
 
@@ -218,7 +218,7 @@ func (ss StateStore) Load(domain Domain) (s *State, err error) {
 	decoder := json.NewDecoder(handle)
 	err = decoder.Decode(&state)
 	if err != nil {
-		err = fmt.Errorf("%w: invalid state content: %w", DecodeState, err)
+		err = fmt.Errorf("invalid state content: %w", err)
 		return
 	}
 
@@ -229,7 +229,7 @@ func (ss StateStore) Load(domain Domain) (s *State, err error) {
 func (ss StateStore) Store(domain Domain, state *State) (err error) {
 	handle, err := ss.fs.OpenFile(domain.Domain, os.O_CREATE|os.O_WRONLY, 0640)
 	if err != nil {
-		err = fmt.Errorf("%w: could not open state file for writing for domain %s: %w", OpenStoreFile, domain.Domain, err)
+		err = fmt.Errorf("could not open state file for writing for domain %s: %w", domain.Domain, err)
 		return
 	}
 
@@ -237,7 +237,7 @@ func (ss StateStore) Store(domain Domain, state *State) (err error) {
 	encoder := json.NewEncoder(handle.(io.Writer))
 	err = encoder.Encode(state)
 	if err != nil {
-		err = fmt.Errorf("%w: invalid state content: %w", EncodeState, err)
+		err = fmt.Errorf("invalid state content: %w", err)
 		return
 	}
 

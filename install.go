@@ -62,7 +62,7 @@ func (i1 Install) Matches(i2 InstallState) bool {
 func writeFile(f fs.Fs, pp PathPerm, content []byte, installType string) (err error) {
 	handle, err := f.OpenFile(pp.Path, os.O_CREATE|os.O_WRONLY, os.FileMode(pp.Perm))
 	if err != nil {
-		err = fmt.Errorf("%w: could not open file %s for writing %s: %w", InstallFile, pp.Path, installType, err)
+		err = fmt.Errorf("could not open file %s for writing %s: %w", pp.Path, installType, err)
 		return
 	}
 
@@ -70,12 +70,12 @@ func writeFile(f fs.Fs, pp PathPerm, content []byte, installType string) (err er
 
 	l, err := io.Copy(handle.(io.Writer), bytes.NewReader(content))
 	if err != nil {
-		err = fmt.Errorf("%w: error while writing %d bytes to file %s: %w", WriteToFile, len(content), pp.Path, err)
+		err = fmt.Errorf("error while writing %d bytes to file %s: %w", len(content), pp.Path, err)
 		return
 	}
 
 	if int(l) != len(content) {
-		err = fmt.Errorf("%w: wrote %d bytes, expected to write %d", UnfinishedWrite, l, len(content))
+		err = fmt.Errorf("wrote %d bytes, expected to write %d", l, len(content))
 		return
 	}
 
@@ -85,7 +85,7 @@ func writeFile(f fs.Fs, pp PathPerm, content []byte, installType string) (err er
 func removeFile(f fs.Fs, path string) (err error) {
 	err = f.Remove(path)
 	if err != nil {
-		err = fmt.Errorf("%w: could not remove file %s: %w", RemoveFile, path, err)
+		err = fmt.Errorf("could not remove file %s: %w", path, err)
 		return
 	}
 

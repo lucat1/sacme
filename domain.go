@@ -44,7 +44,7 @@ func ValidateAccount(raw RawAccount) (a *Account, err error) {
 		acc.KeyType = raw.KeyType
 	}
 	if !VALID_KEY_TYPES[acc.KeyType] {
-		err = fmt.Errorf("%w: invalid key type: %s", InvalidKeyType, acc.KeyType)
+		err = fmt.Errorf("invalid key type: %s", acc.KeyType)
 		return
 	}
 
@@ -54,7 +54,7 @@ func ValidateAccount(raw RawAccount) (a *Account, err error) {
 	}
 	acc.Directroy, err = url.Parse(dir)
 	if err != nil {
-		err = fmt.Errorf("%w: could not parse ACME directory URL: %w", InvalidDirectory, err)
+		err = fmt.Errorf("could not parse ACME directory URL: %w", err)
 		return
 	}
 
@@ -77,7 +77,7 @@ func ValidateAuthentication(raw Authentication) (a *Authentication, err error) {
 		auth.Method = raw.Method
 	}
 	if !VALID_AUTHENTICATION_METHODS[auth.Method] {
-		err = fmt.Errorf("%w: invalid authentication method: %s", InvalidMethod, auth.Method)
+		err = fmt.Errorf("invalid authentication method: %s", auth.Method)
 		return
 	}
 
@@ -85,7 +85,7 @@ func ValidateAuthentication(raw Authentication) (a *Authentication, err error) {
 	auth.Options = DEFAULT_AUTHENTICATION_OPTIONS[auth.Method]
 	for key, val := range raw.Options {
 		if !VALID_AUTHENTICATION_OPTIONS[auth.Method][key] {
-			err = fmt.Errorf("%w: unexpected option %s for method %s", InvalidOption, key, auth.Method)
+			err = fmt.Errorf("unexpected option %s for method %s", key, auth.Method)
 			return
 		}
 
@@ -119,23 +119,23 @@ func ValidatePathPerm(raw RawPathPerm) (p *PathPerm, err error) {
 
 	perm.Path, err = filepath.Abs(raw.Path)
 	if err != nil {
-		err = fmt.Errorf("%w: could not convert install path to absolute: %w", InvalidPath, err)
+		err = fmt.Errorf("could not convert install path to absolute: %w", err)
 		return
 	}
 	pp, err := strconv.ParseInt(raw.Perm, 0, 0)
 	if err != nil {
-		err = fmt.Errorf("%w: could not parse permission value (should start with 0): %w", InvalidPerm, err)
+		err = fmt.Errorf("could not parse permission value (should start with 0): %w", err)
 		return
 	}
 	perm.Perm = os.FileMode(pp)
 	perm.Owner, err = user.Lookup(raw.Owner)
 	if err != nil {
-		err = fmt.Errorf("%w: could not find owner user for install: %w", InvalidOwner, err)
+		err = fmt.Errorf("could not find owner user for install: %w", err)
 		return
 	}
 	perm.Group, err = user.LookupGroup(raw.Group)
 	if err != nil {
-		err = fmt.Errorf("%w: could not find group for install: %w", InvalidGroup, err)
+		err = fmt.Errorf("could not find group for install: %w", err)
 		return
 	}
 
@@ -165,7 +165,7 @@ func ValidateInstall(raw RawInstall) (i *Install, err error) {
 	if raw.Key != nil {
 		inst.Key, err = ValidatePathPerm(*raw.Key)
 		if err != nil {
-			err = fmt.Errorf("%w: invalid install definition for `key`: %w", InvalidInstall, err)
+			err = fmt.Errorf("invalid install definition for `key`: %w", err)
 			return
 		}
 	}
@@ -173,7 +173,7 @@ func ValidateInstall(raw RawInstall) (i *Install, err error) {
 	if raw.Crt != nil {
 		inst.Crt, err = ValidatePathPerm(*raw.Crt)
 		if err != nil {
-			err = fmt.Errorf("%w: invalid install definition for `crt`: %w", InvalidInstall, err)
+			err = fmt.Errorf("invalid install definition for `crt`: %w", err)
 			return
 		}
 	}
@@ -181,7 +181,7 @@ func ValidateInstall(raw RawInstall) (i *Install, err error) {
 	if raw.CA != nil {
 		inst.CA, err = ValidatePathPerm(*raw.CA)
 		if err != nil {
-			err = fmt.Errorf("%w: invalid install definition for `ca`: %w", InvalidInstall, err)
+			err = fmt.Errorf("invalid install definition for `ca`: %w", err)
 			return
 		}
 	}
@@ -189,7 +189,7 @@ func ValidateInstall(raw RawInstall) (i *Install, err error) {
 	if raw.Concat != nil {
 		inst.Concat, err = ValidatePathPerm(*raw.Concat)
 		if err != nil {
-			err = fmt.Errorf("%w: invalid install definition for `concat`: %w", InvalidInstall, err)
+			err = fmt.Errorf("invalid install definition for `concat`: %w", err)
 			return
 		}
 	}
@@ -219,14 +219,14 @@ func ValidateDomain(raw RawDomain) (d *Domain, err error) {
 		Domain: raw.Domain,
 	}
 	if len(dom.Domain) <= 0 {
-		err = fmt.Errorf("%w: missing domain record: %w", InvalidDomain, err)
+		err = fmt.Errorf("missing domain record: %w", err)
 		return
 	}
 
 	var acc *Account
 	acc, err = ValidateAccount(raw.Account)
 	if err != nil {
-		err = fmt.Errorf("%w: could not validate account definition: %w", InvalidAccount, err)
+		err = fmt.Errorf("could not validate account definition: %w", err)
 		return
 	}
 	dom.Account = *acc
@@ -234,7 +234,7 @@ func ValidateDomain(raw RawDomain) (d *Domain, err error) {
 	var auth *Authentication
 	auth, err = ValidateAuthentication(raw.Authentication)
 	if err != nil {
-		err = fmt.Errorf("%w: could not validate authentication definition: %w", InvalidAuthentication, err)
+		err = fmt.Errorf("could not validate authentication definition: %w", err)
 		return
 	}
 	dom.Authentication = *auth
@@ -243,7 +243,7 @@ func ValidateDomain(raw RawDomain) (d *Domain, err error) {
 		var inst *Install
 		inst, err = ValidateInstall(rawInst)
 		if err != nil {
-			err = fmt.Errorf("%w: could not validate install definition at position %d: %w", InvalidInstall, i, err)
+			err = fmt.Errorf("could not validate install definition at position %d: %w", i, err)
 			return
 		}
 		dom.Installs = append(dom.Installs, *inst)
@@ -257,13 +257,13 @@ func ParseDomain(data []byte) (d *Domain, err error) {
 	var domain RawDomain
 	err = toml.Unmarshal(data, &domain)
 	if err != nil {
-		err = fmt.Errorf("%w: could not parse domain TOML definition: %w", InvalidRawDomain, err)
+		err = fmt.Errorf("could not parse domain TOML definition: %w", err)
 		return
 	}
 
 	d, err = ValidateDomain(domain)
 	if err != nil {
-		err = fmt.Errorf("%w: could not verify domain definition: %w", InvalidDomain, err)
+		err = fmt.Errorf("could not verify domain definition: %w", err)
 		return
 	}
 

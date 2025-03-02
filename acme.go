@@ -50,7 +50,7 @@ func GetClient(domain Domain, state State) (client *lego.Client, err error) {
 
 func RegisterAccount(domain Domain, state *State) (err error) {
 	if state.Account.Registration != nil {
-		err = fmt.Errorf("%w: account for domain %s already exists", AccountAlreadyRegistered, domain.Domain)
+		err = fmt.Errorf("account for domain %s already exists", domain.Domain)
 		return
 	}
 
@@ -61,7 +61,7 @@ func RegisterAccount(domain Domain, state *State) (err error) {
 
 	state.Account.Registration, err = client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: domain.Account.AcceptTOS})
 	if err != nil {
-		err = fmt.Errorf("%w: error while registering ACME client with the CA: %w", AccountRegistration, err)
+		err = fmt.Errorf("error while registering ACME client with the CA: %w", err)
 		return
 	}
 
@@ -76,7 +76,7 @@ func SetupProvider(domain Domain, client *lego.Client) (err error) {
 		port := opts[AUTHENTICATION_OPTION_PORT]
 		err = client.Challenge.SetHTTP01Provider(http01.NewProviderServer(iface, port))
 		if err != nil {
-			err = fmt.Errorf("%w: could not setup handler for challange %s: %w", ProviderHTTP01Standalone, domain.Authentication.Method, err)
+			err = fmt.Errorf("could not setup handler for challange %s: %w", domain.Authentication.Method, err)
 			return
 		}
 	default:
@@ -93,7 +93,7 @@ func ObtainCertificate(domain Domain, state *State) (err error) {
 
 	err = SetupProvider(domain, client)
 	if err != nil {
-		err = fmt.Errorf("%w: could not setup provider for ACME challange: %w", ProviderSetup, err)
+		err = fmt.Errorf("could not setup provider for ACME challange: %w", err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func ObtainCertificate(domain Domain, state *State) (err error) {
 		Bundle:  bundle,
 	})
 	if err != nil {
-		err = fmt.Errorf("%w: could not obtain certifiate through ACME: %w", CertificateObtain, err)
+		err = fmt.Errorf("could not obtain certifiate through ACME: %w", err)
 		return
 	}
 	state.ACME = NewACMEState(certificate)
@@ -118,13 +118,13 @@ func RenewCertificate(domain Domain, state *State) (err error) {
 
 	err = SetupProvider(domain, client)
 	if err != nil {
-		err = fmt.Errorf("%w: could not setup provider for ACME challange: %w", ProviderSetup, err)
+		err = fmt.Errorf("could not setup provider for ACME challange: %w", err)
 		return
 	}
 
 	certificate, err := client.Certificate.Renew(state.ACME.ToResource(), bundle, false, "")
 	if err != nil {
-		err = fmt.Errorf("%w: could not renew certifiate through ACME: %w", CertificateRenew, err)
+		err = fmt.Errorf("could not renew certifiate through ACME: %w", err)
 		return
 	}
 	state.ACME = NewACMEState(certificate)

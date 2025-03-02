@@ -11,7 +11,7 @@ import (
 func ListDomainFiles(f fs.FS) (paths []string, err error) {
 	entries, err := fs.ReadDir(f, ".")
 	if err != nil {
-		err = fmt.Errorf("%w: could not list domains directory: %w", ReadDomainsDirectory, err)
+		err = fmt.Errorf("could not list domains directory: %w", err)
 		return
 	}
 
@@ -36,14 +36,14 @@ func LoadDomains(f fs.FS) (domains []Domain, err error) {
 		var content []byte
 		content, err = fs.ReadFile(f, file)
 		if err != nil {
-			err = fmt.Errorf("%w: could not read domain file: %w", ReadDomainFile, err)
+			err = fmt.Errorf("could not read domain file: %w", err)
 			return
 		}
 
 		var domain *Domain
 		domain, err = ParseDomain(content)
 		if err != nil {
-			err = fmt.Errorf("%w: could not parse domain: %w", LoadDomain, err)
+			err = fmt.Errorf("could not parse domain: %w", err)
 			return
 		}
 		domains = append(domains, *domain)
