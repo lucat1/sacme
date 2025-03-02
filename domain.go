@@ -81,7 +81,6 @@ func ValidateAuthentication(raw Authentication) (a *Authentication, err error) {
 		return
 	}
 
-	// TODO: verify options based on the authentication method
 	auth.Options = DEFAULT_AUTHENTICATION_OPTIONS[auth.Method]
 	for key, val := range raw.Options {
 		if !VALID_AUTHENTICATION_OPTIONS[auth.Method][key] {

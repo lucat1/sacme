@@ -69,5 +69,5 @@ func TestParseDomainCorrect(t *testing.T) {
 		Group: g,
 	}, inst0.Crt)
 	assert.Equal(t, sacme.DEFAULT_AUTHENTICATION_METHOD, d.Authentication.Method)
-	assert.Len(t, d.Authentication.Options, 0)
+	assert.Len(t, d.Authentication.Options, len(sacme.DEFAULT_AUTHENTICATION_OPTIONS[d.Authentication.Method]))
 }
