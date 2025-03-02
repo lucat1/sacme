@@ -1,29 +1,29 @@
 Source: sacme
-Section: devel
-Priority: optional
 Maintainer: Luca Tagliavini <luca@teapot.ovh>
-Rules-Requires-Root: no
-Build-Depends: debhelper (>= 13.4),
-               debhelper-compat (= 13),
-               dh-sequence-golang,
+Section: golang
+Testsuite: autopkgtest-pkg-go
+Priority: optional
+Build-Depends: debhelper-compat (= 13),
+               dh-golang,
                golang-any,
-               golang-github-go-acme-lego-dev,
                golang-github-hashicorp-go-retryablehttp-dev,
+               golang-github-pelletier-go-toml-dev,
                golang-github-spf13-afero-dev,
                golang-github-stretchr-testify-dev,
-               golang-github-pelletier-go-toml.v2-dev,
-Standards-Version: 4.6.2
+               golang-github-xenolf-lego-dev,
+               golang-golang-x-exp-dev
+Standards-Version: 4.6.0
+Vcs-Browser: https://github.com/lucat1/sacme
+Vcs-Git: https://github.com/lucat1/sacme.git
 Homepage: https://github.com/lucat1/sacme
-Vcs-Git: https://github.com/lucat1/sacme
+Rules-Requires-Root: no
 XS-Go-Import-Path: github.com/lucat1/sacme
-Testsuite: autopkgtest-pkg-go
 
 Package: sacme
 Architecture: any
-Depends: dpkg-dev,
-         ${misc:Depends},
-         ${shlibs:Depends},
-Static-Built-Using: ${misc:Static-Built-Using},
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Built-Using: ${misc:Built-Using}
 Description: Simple ACME client
  Simple, declarative ACME client. Bulit on production grade libraries,
  allows complex certificate storage and retrival configurations

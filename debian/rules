@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
-
 %:
-	dh $@ --builddirectory=_build
+	dh $@ --builddirectory=_build --buildsystem=golang --with=golang
+
+override_dh_auto_install:
+	dh_auto_install -- --no-source
