@@ -7,7 +7,9 @@ const DOMAIN_FILE_SUFFIX = ".toml"
 const DEFAULT_DIRECTORY = "https://acme-v02.api.letsencrypt.org/directory"
 const DEFAULT_DOMAIN_PATH = "/etc/sacme"
 const DEFAULT_STATE_STORE_PATH = "/var/lib/sacme"
-const DEFAULT_LOG_LEVEL = int(slog.LevelInfo)
+
+// NOTE: replace with slog.LevelInfo on newer slog versions
+const DEFAULT_LOG_LEVEL = int(slog.InfoLevel)
 
 type KeyType string
 

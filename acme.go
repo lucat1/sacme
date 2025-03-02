@@ -122,9 +122,7 @@ func RenewCertificate(domain Domain, state *State) (err error) {
 		return
 	}
 
-	certificate, err := client.Certificate.RenewWithOptions(state.ACME.ToResource(), &certificate.RenewOptions{
-		Bundle: bundle,
-	})
+	certificate, err := client.Certificate.Renew(state.ACME.ToResource(), bundle, false, "")
 	if err != nil {
 		err = fmt.Errorf("%w: could not renew certifiate through ACME: %w", CertificateRenew, err)
 		return
