@@ -2,7 +2,6 @@ package sacme
 
 import (
 	"fmt"
-	"golang.org/x/exp/slog"
 
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
@@ -36,7 +35,8 @@ func GetClient(domain Domain, state State) (client *lego.Client, err error) {
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 5
 	retryClient.HTTPClient = config.HTTPClient
-	retryClient.Logger = slog.Default()
+	// TODO: add when slog from the standard library is used
+	// retryClient.Logger = slog.Default()
 	config.HTTPClient = retryClient.StandardClient()
 
 	client, err = lego.NewClient(config)

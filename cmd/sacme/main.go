@@ -117,6 +117,7 @@ func main() {
 	}
 
 	store := sacme.NewStateStore(fs.NewBasePathFs(rootFS, *stateStorePath))
+	modified := false
 	for _, domain := range domains {
 		slog := slog.With("domain", domain.Domain)
 
@@ -218,6 +219,13 @@ func main() {
 			saveState(&slog, &store, domain, state, "install")
 		}
 
+		modified = modified || newCertificate || modifiedInstalls
 		slog.Info("finished processing")
 	}
+
+	if !modified {
+		slog.Info("unchanged")
+	}
+
+	os.Exit(0)
 }
