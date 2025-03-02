@@ -1,3 +1,9 @@
+sacme (0.2.2-1) UNRELEASED; urgency=medium
+
+  * Downgrade golang.org/exp dependency to build on debian bookworm
+
+ -- Luca Tagliavini <luca@teapot.ovh>  Sun, 02 Mar 2025 12:00:21 +0000
+ 
 sacme (0.2.1-1) UNRELEASED; urgency=medium
 
   * Initial release
