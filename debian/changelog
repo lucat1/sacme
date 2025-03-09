@@ -1,3 +1,9 @@
+sacme (0.2.7-1) UNRELEASED; urgency=medium
+
+  * Implement support for http-01/webroot challange method.
+
+ -- Luca Tagliavini <luca@teapot.ovh>  Sun, 09 Mar 2025 10:34:00 +0000
+
 sacme (0.2.6-1) UNRELEASED; urgency=medium
 
   * Add missing chwon to install step.
