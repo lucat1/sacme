@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/lucat1/sacme"
+	"github.com/lucat1/sacme/pkg/file"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,13 +60,13 @@ func TestParseDomainCorrect(t *testing.T) {
 
 	assert.Len(t, d.Installs, 1)
 	inst0 := d.Installs[0]
-	assert.EqualValues(t, &sacme.PathPerm{
+	assert.EqualValues(t, &file.PathPerm{
 		Path:  "/test/path.key",
 		Perm:  0600,
 		Owner: u,
 		Group: g,
 	}, inst0.Key)
-	assert.EqualValues(t, &sacme.PathPerm{
+	assert.EqualValues(t, &file.PathPerm{
 		Path:  "/test/path.crt",
 		Perm:  0644,
 		Owner: u,
