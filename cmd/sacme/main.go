@@ -43,10 +43,10 @@ func checkForDuplicateDomains(domains []sacme.Domain) *string {
 	return nil
 }
 
-func obtainCertificate(slog *slog.Logger, domain sacme.Domain, state *sacme.State) {
+func obtainCertificate(slog *slog.Logger, domain sacme.Domain, state *sacme.State, rootFS fs.Fs) {
 	slog.Info("obtaining certificate")
 
-	err := sacme.ObtainCertificate(domain, state)
+	err := sacme.ObtainCertificate(domain, state, rootFS)
 	if err != nil {
 		slog.Error("error while obtaining certificate with ACME", err)
 		os.Exit(4)
@@ -55,10 +55,10 @@ func obtainCertificate(slog *slog.Logger, domain sacme.Domain, state *sacme.Stat
 	slog.Info("obtained certificate")
 }
 
-func renewCertificate(slog *slog.Logger, domain sacme.Domain, state *sacme.State) {
+func renewCertificate(slog *slog.Logger, domain sacme.Domain, state *sacme.State, rootFS fs.Fs) {
 	slog.Info("renewing certificate")
 
-	err := sacme.RenewCertificate(domain, state)
+	err := sacme.RenewCertificate(domain, state, rootFS)
 	if err != nil {
 		slog.Error("error while renewing certificate with ACME", err)
 		os.Exit(7)
@@ -148,7 +148,7 @@ func main() {
 
 		newCertificate := false
 		if state.ACME.Empty() {
-			obtainCertificate(&slog, domain, state)
+			obtainCertificate(&slog, domain, state, rootFS)
 			newCertificate = true
 		}
 
@@ -165,10 +165,10 @@ func main() {
 		slog.Info("loaded certificate", "notBefore", certificate.NotBefore, "now", now, "notAfter", certificate.NotAfter, "elapsedtime", elapsedTime, "halfTime", halfTime)
 
 		if elapsedTime >= duration {
-			obtainCertificate(&slog, domain, state)
+			obtainCertificate(&slog, domain, state, rootFS)
 			newCertificate = true
 		} else if elapsedTime >= halfTime {
-			renewCertificate(&slog, domain, state)
+			renewCertificate(&slog, domain, state, rootFS)
 			newCertificate = true
 		}
 
