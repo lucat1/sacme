@@ -9,12 +9,15 @@ accept_tos = true
 method = "http-01/standalone"
 [authentication.options]
 port = "5002"
+# method = "http-01/webroot"
+# [authentication.options]
+# path = "/tmp/.well-known/acme-challenge"
+# owner = "root"
+# group = "root"
+# perm = "0640"
 
 [[installs]]
-hooks = [
-  "true",
-  "echo hi"
-]
+hooks = [ "echo hi" ]
 
 [installs.key]
 path = "/tmp/path.key"

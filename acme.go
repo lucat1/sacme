@@ -10,6 +10,8 @@ import (
 	"github.com/go-acme/lego/v4/registration"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/lucat1/sacme/challenges/webroot"
+	"github.com/lucat1/sacme/pkg/file"
+	fs "github.com/spf13/afero"
 )
 
 func toKeyType(kt KeyType) certcrypto.KeyType {
@@ -69,37 +71,45 @@ func RegisterAccount(domain Domain, state *State) (err error) {
 	return
 }
 
-func SetupProvider(domain Domain, client *lego.Client) (err error) {
+func SetupProvider(domain Domain, client *lego.Client, f fs.Fs) (err error) {
 	opts := domain.Authentication.Options
 	switch domain.Authentication.Method {
 	case AUTHENTICATION_METHOD_HTTP01_STANDALONE:
 		iface := opts[AUTHENTICATION_OPTION_INTERFACE]
 		port := opts[AUTHENTICATION_OPTION_PORT]
 		err = client.Challenge.SetHTTP01Provider(http01.NewProviderServer(iface, port))
-		if err != nil {
-			err = fmt.Errorf("could not setup handler for challange %s: %w", domain.Authentication.Method, err)
-			return
-		}
 	case AUTHENTICATION_METHOD_HTTP01_WEBROOT:
-		path := opts[AUTHENTICATION_OPTION_PATH]
-		err = client.Challenge.SetHTTP01Provider(webroot.NewWebrootProvider(path))
+		rpp := RawPathPerm{
+			Path:  opts[AUTHENTICATION_OPTION_PATH],
+			Owner: opts[AUTHENTICATION_OPTION_OWNER],
+			Group: opts[AUTHENTICATION_OPTION_GROUP],
+			Perm:  opts[AUTHENTICATION_OPTION_PERM],
+		}
+		var pp *file.PathPerm
+		pp, err = ValidatePathPerm(rpp)
 		if err != nil {
-			err = fmt.Errorf("could not setup handler for challange %s: %w", domain.Authentication.Method, err)
+			err = fmt.Errorf("invalid path perm definition in options for %s: %w", domain.Authentication.Method, err)
 			return
 		}
+		// TODO: parse user/group/mode to give them to writeFile, which will be extracted to a util package
+		err = client.Challenge.SetHTTP01Provider(webroot.NewWebrootProvider(f, pp))
 	default:
 		panic(fmt.Sprintf("invalid authentication method: %s", domain.Authentication.Method))
+	}
+	if err != nil {
+		err = fmt.Errorf("could not setup handler for challange %s: %w", domain.Authentication.Method, err)
+		return
 	}
 	return
 }
 
-func ObtainCertificate(domain Domain, state *State) (err error) {
+func ObtainCertificate(domain Domain, state *State, f fs.Fs) (err error) {
 	client, err := GetClient(domain, *state)
 	if err != nil {
 		return
 	}
 
-	err = SetupProvider(domain, client)
+	err = SetupProvider(domain, client, f)
 	if err != nil {
 		err = fmt.Errorf("could not setup provider for ACME challange: %w", err)
 		return
@@ -118,13 +128,13 @@ func ObtainCertificate(domain Domain, state *State) (err error) {
 	return
 }
 
-func RenewCertificate(domain Domain, state *State) (err error) {
+func RenewCertificate(domain Domain, state *State, f fs.Fs) (err error) {
 	client, err := GetClient(domain, *state)
 	if err != nil {
 		return
 	}
 
-	err = SetupProvider(domain, client)
+	err = SetupProvider(domain, client, f)
 	if err != nil {
 		err = fmt.Errorf("could not setup provider for ACME challange: %w", err)
 		return

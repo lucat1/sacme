@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/lucat1/sacme/pkg/file"
 	"github.com/pelletier/go-toml/v2"
 )
 
@@ -103,18 +104,11 @@ type RawPathPerm struct {
 	Group string `toml:"group"`
 }
 
-type PathPerm struct {
-	Path  string
-	Perm  os.FileMode
-	Owner *user.User
-	Group *user.Group
-}
-
 // PrasePathPerm parses a RawPathPerm into an PathPerm struct, resolving the
 // install path to absolute, as well as querying the getent system for
 // user/group data.
-func ValidatePathPerm(raw RawPathPerm) (p *PathPerm, err error) {
-	var perm PathPerm
+func ValidatePathPerm(raw RawPathPerm) (p *file.PathPerm, err error) {
+	var perm file.PathPerm
 
 	perm.Path, err = filepath.Abs(raw.Path)
 	if err != nil {
@@ -151,10 +145,10 @@ type RawInstall struct {
 }
 
 type Install struct {
-	Key    *PathPerm
-	Crt    *PathPerm
-	CA     *PathPerm
-	Concat *PathPerm
+	Key    *file.PathPerm
+	Crt    *file.PathPerm
+	CA     *file.PathPerm
+	Concat *file.PathPerm
 	Hooks  []string
 }
 
