@@ -9,6 +9,7 @@ import (
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/registration"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/lucat1/sacme/challenges/webroot"
 )
 
 func toKeyType(kt KeyType) certcrypto.KeyType {
@@ -75,6 +76,13 @@ func SetupProvider(domain Domain, client *lego.Client) (err error) {
 		iface := opts[AUTHENTICATION_OPTION_INTERFACE]
 		port := opts[AUTHENTICATION_OPTION_PORT]
 		err = client.Challenge.SetHTTP01Provider(http01.NewProviderServer(iface, port))
+		if err != nil {
+			err = fmt.Errorf("could not setup handler for challange %s: %w", domain.Authentication.Method, err)
+			return
+		}
+	case AUTHENTICATION_METHOD_HTTP01_WEBROOT:
+		path := opts[AUTHENTICATION_OPTION_PATH]
+		err = client.Challenge.SetHTTP01Provider(webroot.NewWebrootProvider(path))
 		if err != nil {
 			err = fmt.Errorf("could not setup handler for challange %s: %w", domain.Authentication.Method, err)
 			return
