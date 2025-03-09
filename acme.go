@@ -2,6 +2,7 @@ package sacme
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
@@ -9,6 +10,7 @@ import (
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/registration"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/lucat1/sacme/challenges/acmedns"
 	"github.com/lucat1/sacme/challenges/webroot"
 	"github.com/lucat1/sacme/pkg/file"
 	fs "github.com/spf13/afero"
@@ -27,7 +29,6 @@ func toKeyType(kt KeyType) certcrypto.KeyType {
 	}
 }
 
-// TODO: do we want to bundle? I think this depends on the install type
 const bundle = true
 
 func GetClient(domain Domain, state State) (client *lego.Client, err error) {
@@ -91,8 +92,24 @@ func SetupProvider(domain Domain, client *lego.Client, f fs.Fs) (err error) {
 			err = fmt.Errorf("invalid path perm definition in options for %s: %w", domain.Authentication.Method, err)
 			return
 		}
-		// TODO: parse user/group/mode to give them to writeFile, which will be extracted to a util package
 		err = client.Challenge.SetHTTP01Provider(webroot.NewWebrootProvider(f, pp))
+	case AUTHENTICATION_METHOD_DNS01_ACMEDNS:
+		rawEndpoint := opts[AUTHENTICATION_OPTION_ENDPOINT]
+		var endpoint *url.URL
+		endpoint, err = url.Parse(rawEndpoint)
+		if err != nil {
+			err = fmt.Errorf("could not parse endpoint URL for %s: %w", domain.Authentication.Method, err)
+			return
+		}
+		username := opts[AUTHENTICATION_OPTION_USERNAME]
+		password := opts[AUTHENTICATION_OPTION_PASSWORD]
+		subdomain := opts[AUTHENTICATION_OPTION_SUBDOMAIN]
+		if username == "" || password == "" || subdomain == "" {
+			err = fmt.Errorf("for method %s, all of `%s`, `%s`, `%s` must be configured", domain.Authentication.Method, AUTHENTICATION_OPTION_USERNAME, AUTHENTICATION_OPTION_PASSWORD, AUTHENTICATION_OPTION_SUBDOMAIN)
+			return
+		}
+
+		err = client.Challenge.SetDNS01Provider(acmedns.NewACMEDNSProvider(endpoint, username, password, subdomain))
 	default:
 		panic(fmt.Sprintf("invalid authentication method: %s", domain.Authentication.Method))
 	}

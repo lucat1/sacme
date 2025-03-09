@@ -1,4 +1,4 @@
-domain = "localhost"
+domain = "demo.teapot.ovh"
 
 [account]
 email = "root@example.com"
@@ -15,6 +15,12 @@ port = "5002"
 # owner = "root"
 # group = "root"
 # perm = "0640"
+# method = "dns-01/acmedns"
+# [authentication.options]
+# # endpoint = "custom endpoint if needed"
+# username = "username"
+# password = "password"
+# subdomain = "subdomain"
 
 [[installs]]
 hooks = [ "echo hi" ]
