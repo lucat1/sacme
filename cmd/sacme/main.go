@@ -226,10 +226,9 @@ func main() {
 							stdout, err := cmd.Output()
 							if err != nil {
 								slog.Error("error while running hook", err)
-								os.Exit(11)
+							} else {
+								slog.Info("ran hook", "stdout", string(stdout))
 							}
-
-							slog.Info("ran hook", "stdout", string(stdout))
 						}
 					}
 				}
