@@ -1,3 +1,9 @@
+sacme (0.2.9-1) UNRELEASED; urgency=medium
+
+  * Don't fail if any hook fails.
+
+ -- Luca Tagliavini <luca@teapot.ovh>  Sun, 22 Mar 2025 07:56:21 +0000
+
 sacme (0.2.8-1) UNRELEASED; urgency=medium
 
   * Implement support for dns-01/acmedns challange method.
