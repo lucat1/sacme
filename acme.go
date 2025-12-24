@@ -9,7 +9,6 @@ import (
 	"github.com/go-acme/lego/v4/challenge/http01"
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/registration"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/lucat1/sacme/challenges/acmedns"
 	"github.com/lucat1/sacme/challenges/webroot"
 	"github.com/lucat1/sacme/pkg/file"
@@ -35,13 +34,6 @@ func GetClient(domain Domain, state State) (client *lego.Client, err error) {
 	config := lego.NewConfig(&state.Account)
 	config.CADirURL = domain.Account.Directroy.String()
 	config.Certificate.KeyType = toKeyType(domain.Account.KeyType)
-
-	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = 5
-	retryClient.HTTPClient = config.HTTPClient
-	// TODO: add when slog from the standard library is used
-	// retryClient.Logger = slog.Default()
-	config.HTTPClient = retryClient.StandardClient()
 
 	client, err = lego.NewClient(config)
 	if err != nil {

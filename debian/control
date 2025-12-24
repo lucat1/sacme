@@ -6,7 +6,6 @@ Priority: optional
 Build-Depends: debhelper-compat (= 13),
                dh-golang,
                golang-any,
-               golang-github-hashicorp-go-retryablehttp-dev,
                golang-github-pelletier-go-toml.v2-dev,
                golang-github-spf13-afero-dev,
                golang-github-stretchr-testify-dev,
